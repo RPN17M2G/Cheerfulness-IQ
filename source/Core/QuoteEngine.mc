@@ -4,6 +4,7 @@ import Toybox.Lang;
 import Toybox.Math;
 
 module CoreQuoteEngine {
+
     var activeQuote as String = "";
     var nextQuote as String = "";
     var previousQuote as String = "";
@@ -19,6 +20,7 @@ module CoreQuoteEngine {
             var shardIndex = Math.rand() % moodShardCount;
             var quoteIndex = Math.rand() % QUOTES_PER_SHARD;
             var result = _readQuoteFromShard(moodId, shardIndex, quoteIndex);
+
             if (result != null) {
                 return result;
             }
@@ -31,23 +33,27 @@ module CoreQuoteEngine {
         var shardRow = CoreShardIndex.SHARD_IDS[moodId] as Array<ResourceId>;
         var resourceIdentifier = shardRow[shardIndex];
         var shardData = WatchUi.loadResource(resourceIdentifier) as String;
+
         if (shardData == null || shardData.length() == 0) {
             return null;
         }
 
         var separator = "\n|\n";
-
         var startPos = 0;
+
         for (var i = 0; i < quoteIndex; i++) {
             var remainder = shardData.substring(startPos, shardData.length());
             if (remainder == null) { break; }
+
             var found = remainder.find(separator);
             if (found == null) { break; }
+
             startPos = startPos + found + 3;
         }
 
         var remainder = shardData.substring(startPos, shardData.length());
         if (remainder == null) { return null; }
+
         var endFound = remainder.find(separator);
         var endPos = endFound != null ? startPos + endFound : shardData.length();
 
@@ -65,15 +71,19 @@ module CoreQuoteEngine {
         if (moodId == lastMoodId && activeQuote.length() > 0) {
             return;
         }
+
         var storedMood = Application.Storage.getValue("lastMoodId");
+
         if (storedMood != null && storedMood == moodId) {
             var storedQuote = Application.Storage.getValue("activeQuote");
+
             if (storedQuote != null && storedQuote.toString().length() > 0) {
                 activeQuote = storedQuote.toString();
                 lastMoodId = moodId;
                 return;
             }
         }
+
         lastMoodId = moodId;
         activeQuote = pickRandomQuote(moodId);
         Application.Storage.setValue("lastMoodId", moodId);
@@ -85,13 +95,16 @@ module CoreQuoteEngine {
     function advance(moodId as Number) as Void {
         lastMoodId = moodId;
         previousQuote = activeQuote;
+
         if (nextQuote.length() > 0) {
             activeQuote = nextQuote;
         } else {
             activeQuote = pickRandomQuote(moodId);
         }
+
         nextQuote = pickRandomQuote(moodId);
         Application.Storage.setValue("lastMoodId", moodId);
         Application.Storage.setValue("activeQuote", activeQuote);
     }
+
 }

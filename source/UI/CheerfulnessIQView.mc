@@ -9,6 +9,7 @@ class CheerfulnessIQView extends WatchUi.View {
     var moodId as Number;
     var isMoodForced as Boolean;
     var displayQuote as String;
+
     private const SCROLL_STEP = 25;
     private const SCROLL_MAX_OFFSET = -600;
     private const VIEWPORT_SPLIT_RATIO = 0.3f;
@@ -63,6 +64,7 @@ class CheerfulnessIQView extends WatchUi.View {
         var splitY = (screenHeight * VIEWPORT_SPLIT_RATIO).toNumber();
 
         deviceContext.setClip(0, 0, screenWidth, splitY);
+
         if (activeBitmap != null) {
             deviceContext.drawBitmap(0, 0, activeBitmap);
         }
@@ -94,12 +96,18 @@ class CheerfulnessIQView extends WatchUi.View {
         var label = CoreMood.LABELS[moodId];
         var centerX = screenWidth / 2;
 
-        drawShadowedText(deviceContext, centerX, BANNER_TEXT_Y, Graphics.FONT_SMALL, label, Graphics.COLOR_WHITE, Graphics.COLOR_BLACK, false);
+        drawShadowedText(
+            deviceContext, centerX, BANNER_TEXT_Y,
+            Graphics.FONT_SMALL, label,
+            Graphics.COLOR_WHITE, Graphics.COLOR_BLACK,
+            false
+        );
 
         if (CoreBiometrics.isChaotic()) {
             drawShadowedText(
                 deviceContext,
-                screenWidth - CHAOS_INDICATOR_RIGHT_MARGIN, CHAOS_INDICATOR_Y,
+                screenWidth - CHAOS_INDICATOR_RIGHT_MARGIN,
+                CHAOS_INDICATOR_Y,
                 Graphics.FONT_XTINY, "~",
                 Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK,
                 true
@@ -114,14 +122,19 @@ class CheerfulnessIQView extends WatchUi.View {
         foregroundColor as Number, shadowColor as Number,
         rightAligned as Boolean
     ) as Void {
-        var justifyFlag = rightAligned ? Graphics.TEXT_JUSTIFY_RIGHT : Graphics.TEXT_JUSTIFY_CENTER;
+        var justifyFlag = rightAligned
+            ? Graphics.TEXT_JUSTIFY_RIGHT
+            : Graphics.TEXT_JUSTIFY_CENTER;
+
         deviceContext.setColor(shadowColor, Graphics.COLOR_TRANSPARENT);
+
         for (var dx = -SHADOW_OFFSET; dx <= SHADOW_OFFSET; dx += SHADOW_OFFSET) {
             for (var dy = -SHADOW_OFFSET; dy <= SHADOW_OFFSET; dy += SHADOW_OFFSET) {
                 if (dx == 0 && dy == 0) { continue; }
                 deviceContext.drawText(x + dx, y + dy, font, text, justifyFlag);
             }
         }
+
         deviceContext.setColor(foregroundColor, Graphics.COLOR_TRANSPARENT);
         deviceContext.drawText(x, y, font, text, justifyFlag);
     }
@@ -137,6 +150,7 @@ class CheerfulnessIQView extends WatchUi.View {
 
     function scrollDown() as Void {
         scrollOffset -= SCROLL_STEP;
+
         if (scrollOffset < SCROLL_MAX_OFFSET) {
             scrollOffset = SCROLL_MAX_OFFSET;
         }
@@ -144,6 +158,7 @@ class CheerfulnessIQView extends WatchUi.View {
 
     function scrollUp() as Void {
         scrollOffset += SCROLL_STEP;
+
         if (scrollOffset > 0) {
             scrollOffset = 0;
         }

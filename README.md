@@ -19,41 +19,41 @@ A 3% chaos roll occasionally serves a quote from a random mood to introduce fres
 
 ### Controls
 
-- **UP/DOWN** — Scroll quote text vertically
-- **SELECT** — Open menu: advance to next quote or force-select a mood
+- **UP/DOWN** - Scroll quote text vertically
+- **SELECT** - Open menu: advance to next quote or force-select a mood
 - The widget appears in the watch face scroll loop via `GlanceView`
 
 ## Architecture
 
 ### 64,000 Quotes, On-Device
 
-Quotes are stored as 642 JSON string shard files (225 per Resting/Prime, 100 for Burnout, 92 for Wired; 100 quotes per shard, ~24 KB each). The engine loads one shard at a time, extracts a single quote via `\n|\n` separator scanning, and immediately nulls the buffer — peak heap usage stays under ~50 KB. Quote persists in `Application.Storage` across widget restarts until the mood changes or the user selects "Next Quote".
+Quotes are stored as 642 JSON string shard files (225 per Resting/Prime, 100 for Burnout, 92 for Wired; 100 quotes per shard, ~24 KB each). The engine loads one shard at a time, extracts a single quote via `\n|\n` separator scanning, and immediately nulls the buffer - peak heap usage stays under ~50 KB. Quote persists in `Application.Storage` across widget restarts until the mood changes or the user selects "Next Quote".
 
 ### Quote Selection
 
-Per-mood counts are unequal — the Python pipeline dynamically sets each mood's target to `max(10000, keyword_matched_quotes)` capped at 22500. If keyword-matched quotes in the DB are insufficient, random-fill from the general pool brings the mood to 10000. The last shard of each mood may contain fewer than 100 quotes; `_readQuoteFromShard` relies on the retry loop when the random index exceeds the actual shard count.
+Per-mood counts are unequal - the Python pipeline dynamically sets each mood's target to `max(10000, keyword_matched_quotes)` capped at 22500. If keyword-matched quotes in the DB are insufficient, random-fill from the general pool brings the mood to 10000. The last shard of each mood may contain fewer than 100 quotes; `_readQuoteFromShard` relies on the retry loop when the random index exceeds the actual shard count.
 
 ### Project Structure
 
 ```
 source/
-  CheerfulnessIQApp.mc              — App entry point (extends AppBase)
+  CheerfulnessIQApp.mc              - App entry point (extends AppBase)
   Core/
-    Biometrics.mc                   — Stress/BB evaluation + 3% chaos roll
-    Mood.mc                         — Mood enum, labels, bitmap IDs
-    QuoteEngine.mc                  — Random quote picker with shard scanning
-    ShardIndex.mc                   — Auto-generated ResourceId lookup table
+    Biometrics.mc                   - Stress/BB evaluation + 3% chaos roll
+    Mood.mc                         - Mood enum, labels, bitmap IDs
+    QuoteEngine.mc                  - Random quote picker with shard scanning
+    ShardIndex.mc                   - Auto-generated ResourceId lookup table
   UI/
-    CheerfulnessIQView.mc           — 30/70 viewport with mood photo + TextArea
-    CheerfulnessIQDelegate.mc       — UP/DOWN scroll, SELECT menu trigger
-    CheerfulnessIQMenuDelegate.mc   — Menu2 handler (advance, force mood)
-    CheerfulnessIQGlanceView.mc     — Title text for watch face glance loop
+    CheerfulnessIQView.mc           - 30/70 viewport with mood photo + TextArea
+    CheerfulnessIQDelegate.mc       - UP/DOWN scroll, SELECT menu trigger
+    CheerfulnessIQMenuDelegate.mc   - Menu2 handler (advance, force mood)
+    CheerfulnessIQGlanceView.mc     - Title text for watch face glance loop
 scripts/
-    build_shards.py                 — Pipeline: extract + pack + index
-    extract_quotes.py               — Keyword-score 286K quotes into 4 moods
+    build_shards.py                 - Pipeline: extract + pack + index
+    extract_quotes.py               - Keyword-score 286K quotes into 4 moods
 resources/
-    quotes/*.json                   — 642 JSON string shard files
-    drawables/*.png                 — 4 mood photos + launcher icon
+    quotes/*.json                   - 642 JSON string shard files
+    drawables/*.png                 - 4 mood photos + launcher icon
 ```
 
 ## Building & Running
