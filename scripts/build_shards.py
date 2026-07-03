@@ -1,15 +1,14 @@
-import struct
 import os
 import random
+import json
 
 SHARD_SIZE = 100
-EMPTY_SLOT = 0xFFFF
 MOODS = ["Resting", "Prime", "Burnout", "Wired"]
 MOOD_FILES = {m: f"data/{m.lower()}.txt" for m in MOODS}
-RESOURCE_OUT = "resources/resources.xml"
-QUOTES_DIR = "resources/quotes"
+SHARD_DIR = "resources/quotes"
+RESOURCE_XML = "resources/resources.xml"
 
-SEPARATOR = "\x01"
+SEPARATOR = "\n|\n"
 
 AUTHORS = [
     "Marcus Aurelius", "Seneca", "Epictetus", "James Clear",
@@ -173,18 +172,21 @@ def build_shards_for_mood(mood_name, src_path):
     total_quotes = len(quotes)
     num_shards = (total_quotes + SHARD_SIZE - 1) // SHARD_SIZE
     entries = []
+    os.makedirs(SHARD_DIR, exist_ok=True)
     for shard_idx in range(num_shards):
         start = shard_idx * SHARD_SIZE
         end = min(start + SHARD_SIZE, total_quotes)
         slice_quotes = quotes[start:end]
-        payload = SEPARATOR.join(slice_quotes)
-        ext = ".txt"
-        filename = f"bin_{mood_name.lower()}_{shard_idx}{ext}"
-        filepath = os.path.join(QUOTES_DIR, filename)
-        with open(filepath, "w", encoding="utf-8") as out:
-            out.write(payload)
-        entries.append((f"bin_{mood_name.lower()}_{shard_idx}", f"quotes/{filename}", len(slice_quotes)))
-        print(f"  [+] Built {filename} ({len(slice_quotes)} quotes, {len(payload.encode('utf-8'))}B)")
+        combined = SEPARATOR.join(slice_quotes)
+        res_id = f"bin_{mood_name.lower()}_{shard_idx}"
+        filename = f"{res_id}.json"
+        filepath = os.path.join(SHARD_DIR, filename)
+        json_str = json.dumps(combined, ensure_ascii=False)
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(json_str)
+        size = len(json_str.encode("utf-8"))
+        entries.append((res_id, filename, len(slice_quotes), size))
+        print(f"  [+] {filename} ({len(slice_quotes)} quotes, {size}B)")
     return entries
 
 def generate_resources_xml(all_entries):
@@ -193,28 +195,27 @@ def generate_resources_xml(all_entries):
     lines.append('    <string id="MenuTitle">Options</string>')
     lines.append('    <string id="NextQuote">Next Quote</string>')
     lines.append('    <string id="SelectMood">Select Mood</string>')
-    lines.append('    <string id="ToggleCooldown">Toggle Cooldown</string>')
+
     lines.append('    <string id="MoodWiredLabel">Wired</string>')
     lines.append('    <string id="MoodPrimeLabel">Prime</string>')
     lines.append('    <string id="MoodBurnoutLabel">Burnout</string>')
     lines.append('    <string id="MoodRestingLabel">Resting</string>')
     lines.append('')
-    lines.append('    <!-- Quote Shards (delimited text, loaded as jsonData -> String) -->')
-    for res_id, filename, count in all_entries:
-        lines.append(f'    <jsonData id="{res_id}" filename="{filename}" />')
+    lines.append('    <!-- Quote Shards (JSON strings) -->')
+    for res_id, filename, count, size in all_entries:
+        lines.append(f'    <jsonData id="{res_id}" filename="quotes/{filename}" />')
     lines.append('')
     lines.append('    <!-- Mood Bitmaps -->')
     for mood in MOODS:
         lines.append(f'    <bitmap id="Mood{mood}" filename="drawables/mood_{mood.lower()}.png" />')
     lines.append('    <bitmap id="LauncherIcon" filename="drawables/launcher_icon.png" />')
     lines.append('</resources>')
-    with open(RESOURCE_OUT, "w", encoding="utf-8") as f:
+    with open(RESOURCE_XML, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
-    print(f"\n[+] Generated {RESOURCE_OUT} with {len(all_entries)} shards.")
+    print(f"\n[+] Generated {RESOURCE_XML} with {len(all_entries)} shards.")
 
 def main():
-    print("=== Cheerfulness IQ Data Pipeline (SDK 9.x String-based Shards) ===")
-    os.makedirs(QUOTES_DIR, exist_ok=True)
+    print("=== Cheerfulness IQ Data Pipeline (JSON String Shards) ===")
     create_mock_data()
     all_entries = []
     for mood in MOODS:

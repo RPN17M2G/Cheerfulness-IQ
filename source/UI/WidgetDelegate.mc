@@ -39,12 +39,6 @@ class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
             :select_mood,
             null
         ));
-        menu.addItem(new WatchUi.MenuItem(
-            WatchUi.loadResource(Rez.Strings.ToggleCooldown) as String,
-            "",
-            :toggle_cooldown,
-            null
-        ));
 
         WatchUi.pushView(menu, new CheerfulnessIQMenuDelegate(view), WatchUi.SLIDE_UP);
         return true;

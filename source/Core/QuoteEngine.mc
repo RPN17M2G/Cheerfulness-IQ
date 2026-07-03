@@ -7,9 +7,10 @@ module CoreQuoteEngine {
     var nextQuote as String = "";
     var prevQuote as String = "";
 
-    private const QUOTES_PER_SHARD = 100;
-    private const MAX_RETRIES = 5;
-    private const SEP = "\x01";
+    const QUOTES_PER_SHARD = 100;
+    const MAX_RETRIES = 5;
+    const SEP = "\n|\n";
+    const SEP_LEN = 3;
 
     function extractQuoteFromBin(moodId as Number) as String {
         var shardCount = _getShardCount(moodId);
@@ -26,9 +27,9 @@ module CoreQuoteEngine {
         return "Keep going. One day at a time.\n\n- Unknown";
     }
 
-    private function _readQuote(moodId as Number, shardIdx as Number, quoteIdx as Number) as String? {
-        var resourceSymbol = _getBinSymbol(moodId, shardIdx);
-        var shardString = WatchUi.loadResource(resourceSymbol) as String;
+    function _readQuote(moodId as Number, shardIdx as Number, quoteIdx as Number) as String? {
+        var resId = _getBinSymbol(moodId, shardIdx);
+        var shardString = WatchUi.loadResource(resId) as String;
         if (shardString == null || shardString.length() == 0) {
             return null;
         }
@@ -38,7 +39,9 @@ module CoreQuoteEngine {
         var searchFrom = 0;
 
         for (var i = 0; i <= quoteIdx; i++) {
-            var sepPos = shardString.find(SEP, searchFrom);
+            var searchStr = shardString.substring(searchFrom, shardString.length());
+            var found = searchStr != null ? searchStr.find(SEP) : null;
+            var sepPos = found != null ? searchFrom + found : null;
             if (sepPos == null) {
                 if (i == quoteIdx) {
                     startIdx = searchFrom;
@@ -53,7 +56,7 @@ module CoreQuoteEngine {
                 currentIdx = sepPos;
                 break;
             }
-            searchFrom = sepPos + 1;
+            searchFrom = sepPos + SEP_LEN;
         }
 
         var quote = shardString.substring(startIdx, currentIdx);
@@ -66,11 +69,11 @@ module CoreQuoteEngine {
         return quote;
     }
 
-    private function _getShardCount(moodId as Number) as Number {
+    function _getShardCount(moodId as Number) as Number {
         return 2;
     }
 
-    private function _getBinSymbol(moodId as Number, shardIdx as Number) as Symbol {
+    function _getBinSymbol(moodId as Number, shardIdx as Number) as ResourceId {
         if (moodId == 3) {
             return shardIdx == 0 ? Rez.JsonData.bin_wired_0 : Rez.JsonData.bin_wired_1;
         } else if (moodId == 1) {

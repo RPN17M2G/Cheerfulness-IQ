@@ -7,6 +7,7 @@ class CheerfulnessIQView extends WatchUi.View {
     var scrollOffset as Number;
     var activeBitmap as BitmapResource?;
     var currentMood as Number;
+    var moodForced as Boolean;
 
     private const SCROLL_STEP = 25;
     private const SCROLL_MIN = -800;
@@ -16,13 +17,17 @@ class CheerfulnessIQView extends WatchUi.View {
         scrollOffset = 0;
         activeBitmap = null;
         currentMood = 0;
+        moodForced = false;
     }
 
     function onLayout(dc as Dc) as Void {
     }
 
     function onShow() as Void {
-        currentMood = CoreBiometrics.evaluate();
+        if (!moodForced) {
+            currentMood = CoreBiometrics.evaluate();
+        }
+        moodForced = false;
         CoreQuoteEngine.init(currentMood);
         loadBitmap(currentMood);
         scrollOffset = 0;
@@ -55,12 +60,9 @@ class CheerfulnessIQView extends WatchUi.View {
 
         dc.setClip(0, 0, width, splitY);
         if (activeBitmap != null) {
-            var bmpW = activeBitmap.getWidth();
-            var bmpH = activeBitmap.getHeight();
-            var bmpX = (width - bmpW) / 2;
-            var bmpY = (splitY - bmpH) / 2;
-            dc.drawBitmap(bmpX, bmpY, activeBitmap);
+            dc.drawBitmap(0, 0, activeBitmap);
         }
+        _drawMoodBanner(dc, currentMood, width, splitY);
         dc.clearClip();
 
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
@@ -69,25 +71,29 @@ class CheerfulnessIQView extends WatchUi.View {
         var textArea = new WatchUi.TextArea({
             :text => CoreQuoteEngine.activeQuote,
             :color => Graphics.COLOR_WHITE,
-            :font => [Graphics.FONT_SMALL],
+            :font => [Graphics.FONT_XTINY],
             :locX => WatchUi.LAYOUT_HALIGN_CENTER,
             :locY => (height * 0.35).toNumber() + scrollOffset,
-            :width => width - 8,
+            :width => width - 36,
             :height => (height * 0.65).toNumber()
         });
 
         dc.setClip(0, splitY + 1, width, height - splitY - 1);
         textArea.draw(dc);
         dc.clearClip();
-
-        _drawMoodLabel(dc, currentMood, width);
     }
 
-    private function _drawMoodLabel(dc as Dc, moodId as Number, width as Number) as Void {
+    private function _drawMoodBanner(dc as Dc, moodId as Number, width as Number, splitY as Number) as Void {
         var labels = ["Resting", "Prime", "Burnout", "Wired"];
         var label = labels[moodId];
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 2, Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(0, 0, width, 20);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, 2, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+        if (CoreBiometrics.lastWasChaotic) {
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width - 8, 3, Graphics.FONT_XTINY, "~", Graphics.TEXT_JUSTIFY_RIGHT);
+        }
     }
 
     function clampScrollOffset() as Void {

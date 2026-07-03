@@ -1,15 +1,11 @@
-import Toybox.WatchUi;
 import Toybox.Application;
+import Toybox.WatchUi;
 import Toybox.Lang;
 
-class CheerfulnessIQWidget extends WatchUi.Widget {
+class CheerfulnessIQApp extends Application.AppBase {
 
     function initialize() {
-        Widget.initialize();
-    }
-
-    function getGlanceView() as WatchUi.GlanceView? {
-        return new CheerfulnessIQGlanceView();
+        AppBase.initialize();
     }
 
     function getInitialView() as [Views] or [Views, InputDelegates] {
@@ -17,8 +13,13 @@ class CheerfulnessIQWidget extends WatchUi.Widget {
         var delegate = new CheerfulnessIQDelegate(view);
         return [view, delegate];
     }
+
+    (:glance)
+    function getGlanceView() {
+        return [ new CheerfulnessIQGlanceView() ];
+    }
 }
 
-function getApp() as CheerfulnessIQWidget {
-    return Application.getApp() as CheerfulnessIQWidget;
+function getApp() as CheerfulnessIQApp {
+    return Application.getApp() as CheerfulnessIQApp;
 }

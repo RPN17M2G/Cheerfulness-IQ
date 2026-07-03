@@ -11,31 +11,24 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
         view = v;
     }
 
-    function onSelect(item as MenuItem) as Boolean {
-        var id = item.getId();
+    function onSelect(item as MenuItem) {
+        var id = item.getId() as Symbol;
 
         if (id.equals(:next_quote)) {
-            return _onNextQuote();
+            _onNextQuote();
         } else if (id.equals(:select_mood)) {
-            return _onSelectMood();
-        } else if (id.equals(:toggle_cooldown)) {
-            return _onToggleCooldown();
+            _onSelectMood();
         } else if (id.equals(:mood_resting) || id.equals(:mood_prime) ||
                    id.equals(:mood_burnout) || id.equals(:mood_wired)) {
-            return _onForceMood(id);
+            _onForceMood(id);
         }
-
-        return true;
     }
 
     private function _onNextQuote() as Boolean {
-        if (CoreSettings.canSwapQuote()) {
-            CoreSettings.setLastSwap(Time.now().value());
-            CoreQuoteEngine.advance(view.currentMood);
-            view.scrollOffset = 0;
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
-            WatchUi.requestUpdate();
-        }
+        CoreQuoteEngine.advance(view.currentMood);
+        view.scrollOffset = 0;
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.requestUpdate();
         return true;
     }
 
@@ -84,6 +77,7 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
             view.currentMood = 3;
         }
 
+        view.moodForced = true;
         CoreQuoteEngine.init(view.currentMood);
         view.loadBitmap(view.currentMood);
         view.scrollOffset = 0;
@@ -92,15 +86,7 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
         return true;
     }
 
-    private function _onToggleCooldown() as Boolean {
-        var enabled = CoreSettings.getCooldownEnabled();
-        CoreSettings.setCooldownEnabled(!enabled);
+    function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
-        return true;
-    }
-
-    function onBack() as Boolean {
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
-        return true;
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!-- Manifest for Cheerfulness IQ Widget -->
 <iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
-    <iq:application id="a942fb10-a965-45f1-88f1-827984f888a6" type="widget" name="@Strings.AppName" entry="CheerfulnessIQWidget" launcherIcon="@Drawables.LauncherIcon" minApiLevel="5.2.0">
+    <iq:application id="a942fb10-a965-45f1-88f1-827984f888a6" type="watch-app" name="@Strings.AppName" entry="CheerfulnessIQApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="5.2.0">
         <iq:products>
             <iq:product id="fr255"/>
             <iq:product id="fr255m"/>

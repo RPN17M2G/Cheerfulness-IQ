@@ -3,21 +3,20 @@
     <string id="MenuTitle">Options</string>
     <string id="NextQuote">Next Quote</string>
     <string id="SelectMood">Select Mood</string>
-    <string id="ToggleCooldown">Toggle Cooldown</string>
     <string id="MoodWiredLabel">Wired</string>
     <string id="MoodPrimeLabel">Prime</string>
     <string id="MoodBurnoutLabel">Burnout</string>
     <string id="MoodRestingLabel">Resting</string>
 
-    <!-- Quote Shards (delimited text, loaded as jsonData -> String) -->
-    <jsonData id="bin_resting_0" filename="quotes/bin_resting_0.txt" />
-    <jsonData id="bin_resting_1" filename="quotes/bin_resting_1.txt" />
-    <jsonData id="bin_prime_0" filename="quotes/bin_prime_0.txt" />
-    <jsonData id="bin_prime_1" filename="quotes/bin_prime_1.txt" />
-    <jsonData id="bin_burnout_0" filename="quotes/bin_burnout_0.txt" />
-    <jsonData id="bin_burnout_1" filename="quotes/bin_burnout_1.txt" />
-    <jsonData id="bin_wired_0" filename="quotes/bin_wired_0.txt" />
-    <jsonData id="bin_wired_1" filename="quotes/bin_wired_1.txt" />
+    <!-- Quote Shards (JSON strings) -->
+    <jsonData id="bin_resting_0" filename="quotes/bin_resting_0.json" />
+    <jsonData id="bin_resting_1" filename="quotes/bin_resting_1.json" />
+    <jsonData id="bin_prime_0" filename="quotes/bin_prime_0.json" />
+    <jsonData id="bin_prime_1" filename="quotes/bin_prime_1.json" />
+    <jsonData id="bin_burnout_0" filename="quotes/bin_burnout_0.json" />
+    <jsonData id="bin_burnout_1" filename="quotes/bin_burnout_1.json" />
+    <jsonData id="bin_wired_0" filename="quotes/bin_wired_0.json" />
+    <jsonData id="bin_wired_1" filename="quotes/bin_wired_1.json" />
 
     <!-- Mood Bitmaps -->
     <bitmap id="MoodResting" filename="drawables/mood_resting.png" />
