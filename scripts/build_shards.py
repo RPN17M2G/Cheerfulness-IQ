@@ -187,7 +187,7 @@ def generate_shard_index(all_entries: List[Tuple[str, str, int, int]]) -> None:
         "",
         f"    const SHARD_COUNT as Number = {max_shards};",
         "",
-        "    const SHARD_IDS as Array = [",
+        "    const SHARD_IDS as Array<Array<ResourceId>> = [",
     ]
 
     for mood_index, mood_name in enumerate(MOOD_ORDER):

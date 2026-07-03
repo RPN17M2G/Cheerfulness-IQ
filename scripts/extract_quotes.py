@@ -173,8 +173,16 @@ def clean_raw_text(raw: str) -> str:
 
 
 def is_valid_quote(text: str) -> bool:
-    """Check that the quote meets minimum length and fits within the maximum."""
-    return len(text) >= MINIMUM_QUOTE_LENGTH and truncate_quote(text) is not None
+    """Check that the quote meets minimum length, fits within the maximum,
+    and is not a truncated fragment."""
+    if len(text) < MINIMUM_QUOTE_LENGTH:
+        return False
+    if truncate_quote(text) is None:
+        return False
+    stripped = text.strip()
+    if stripped.startswith("...") or stripped.endswith("..."):
+        return False
+    return True
 
 
 def configure_logging() -> None:

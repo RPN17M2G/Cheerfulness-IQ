@@ -6,9 +6,10 @@ module CoreQuoteEngine {
     var activeQuote as String = "";
     var nextQuote as String = "";
     var previousQuote as String = "";
+    var lastMoodIdentifier as Number = -1;
 
     const QUOTES_PER_SHARD = 100;
-    const MAXIMUM_RETRIES = 5;
+    const MAXIMUM_RETRIES = 3;
     const QUOTE_SEPARATOR = "\n|\n";
     const QUOTE_SEPARATOR_LENGTH = 3;
 
@@ -38,10 +39,13 @@ module CoreQuoteEngine {
         var startIndex = 0;
         var currentIndex = 0;
         var searchPosition = 0;
+        var separator = QUOTE_SEPARATOR;
+        var separatorLength = QUOTE_SEPARATOR_LENGTH;
 
         for (var positionInShard = 0; positionInShard <= quoteIndex; positionInShard++) {
             var searchSlice = shardData.substring(searchPosition, shardData.length());
-            var found = searchSlice != null ? searchSlice.find(QUOTE_SEPARATOR) : null;
+            if (searchSlice == null) { return null; }
+            var found = searchSlice.find(separator);
             var separatorPosition = found != null ? searchPosition + found : null;
             if (separatorPosition == null) {
                 if (positionInShard == quoteIndex) {
@@ -57,7 +61,7 @@ module CoreQuoteEngine {
                 currentIndex = separatorPosition;
                 break;
             }
-            searchPosition = separatorPosition + QUOTE_SEPARATOR_LENGTH;
+            searchPosition = separatorPosition + separatorLength;
         }
 
         var quote = shardData.substring(startIndex, currentIndex);
@@ -71,14 +75,23 @@ module CoreQuoteEngine {
     }
 
     function initialize(moodIdentifier as Number) as Void {
+        if (moodIdentifier == lastMoodIdentifier && activeQuote.length() > 0) {
+            return;
+        }
+        lastMoodIdentifier = moodIdentifier;
         activeQuote = extractQuoteFromBin(moodIdentifier);
-        nextQuote = extractQuoteFromBin(moodIdentifier);
+        nextQuote = "";
         previousQuote = "";
     }
 
     function advance(moodIdentifier as Number) as Void {
+        lastMoodIdentifier = moodIdentifier;
         previousQuote = activeQuote;
-        activeQuote = nextQuote;
+        if (nextQuote.length() > 0) {
+            activeQuote = nextQuote;
+        } else {
+            activeQuote = extractQuoteFromBin(moodIdentifier);
+        }
         nextQuote = extractQuoteFromBin(moodIdentifier);
     }
 }

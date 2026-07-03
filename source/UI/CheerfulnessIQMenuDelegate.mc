@@ -69,6 +69,7 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
                 viewReference.loadBitmap(index);
                 viewReference.scrollOffset = 0;
                 WatchUi.popView(WatchUi.SLIDE_DOWN);
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
                 WatchUi.requestUpdate();
                 return true;
             }
