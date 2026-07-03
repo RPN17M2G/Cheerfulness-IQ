@@ -102,11 +102,7 @@ copies or substantial portions of the Software.
 
 ### Background Images
 
-Mood photographs are sourced from Unsplash under the Unsplash License (free for commercial and non-commercial use):
-- Resting (lake) — by Marc-Olivier Jodoin
-- Prime (sunrise fields) — by Aaron Burden
-- Burnout (forest) — by Sebastian Unrau
-- Wired (purple sunset) — by Pietro De Grandi
+Mood photographs are under a free to use commertical license.  
 
 ### This Project
 
