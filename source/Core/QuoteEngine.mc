@@ -7,18 +7,18 @@ module CoreQuoteEngine {
     var activeQuote as String = "";
     var nextQuote as String = "";
     var previousQuote as String = "";
-    var lastMoodIdentifier as Number = -1;
+    var lastMoodId as Number = -1;
 
     const QUOTES_PER_SHARD = 100;
     const MAXIMUM_RETRIES = 3;
 
-    function extractQuoteFromBin(moodIdentifier as Number) as String {
-        var moodShardCount = CoreShardIndex.MOOD_SHARD_COUNTS[moodIdentifier] as Number;
+    function pickRandomQuote(moodId as Number) as String {
+        var moodShardCount = CoreShardIndex.MOOD_SHARD_COUNTS[moodId] as Number;
 
         for (var attempt = 0; attempt < MAXIMUM_RETRIES; attempt++) {
             var shardIndex = Math.rand() % moodShardCount;
             var quoteIndex = Math.rand() % QUOTES_PER_SHARD;
-            var result = _readQuote(moodIdentifier, shardIndex, quoteIndex);
+            var result = _readQuoteFromShard(moodId, shardIndex, quoteIndex);
             if (result != null) {
                 return result;
             }
@@ -27,8 +27,8 @@ module CoreQuoteEngine {
         return "Keep going. One day at a time.\n\n- Unknown";
     }
 
-    function _readQuote(moodIdentifier as Number, shardIndex as Number, quoteIndex as Number) as String? {
-        var shardRow = CoreShardIndex.SHARD_IDS[moodIdentifier] as Array<ResourceId>;
+    function _readQuoteFromShard(moodId as Number, shardIndex as Number, quoteIndex as Number) as String? {
+        var shardRow = CoreShardIndex.SHARD_IDS[moodId] as Array<ResourceId>;
         var resourceIdentifier = shardRow[shardIndex];
         var shardData = WatchUi.loadResource(resourceIdentifier) as String;
         if (shardData == null || shardData.length() == 0) {
@@ -61,37 +61,37 @@ module CoreQuoteEngine {
         return quote;
     }
 
-    function initialize(moodIdentifier as Number) as Void {
-        if (moodIdentifier == lastMoodIdentifier && activeQuote.length() > 0) {
+    function initialize(moodId as Number) as Void {
+        if (moodId == lastMoodId && activeQuote.length() > 0) {
             return;
         }
-        var storedMood = Application.Storage.getValue("lastMoodIdentifier");
-        if (storedMood != null && storedMood == moodIdentifier) {
+        var storedMood = Application.Storage.getValue("lastMoodId");
+        if (storedMood != null && storedMood == moodId) {
             var storedQuote = Application.Storage.getValue("activeQuote");
             if (storedQuote != null && storedQuote.toString().length() > 0) {
                 activeQuote = storedQuote.toString();
-                lastMoodIdentifier = moodIdentifier;
+                lastMoodId = moodId;
                 return;
             }
         }
-        lastMoodIdentifier = moodIdentifier;
-        activeQuote = extractQuoteFromBin(moodIdentifier);
-        Application.Storage.setValue("lastMoodIdentifier", moodIdentifier);
+        lastMoodId = moodId;
+        activeQuote = pickRandomQuote(moodId);
+        Application.Storage.setValue("lastMoodId", moodId);
         Application.Storage.setValue("activeQuote", activeQuote);
         nextQuote = "";
         previousQuote = "";
     }
 
-    function advance(moodIdentifier as Number) as Void {
-        lastMoodIdentifier = moodIdentifier;
+    function advance(moodId as Number) as Void {
+        lastMoodId = moodId;
         previousQuote = activeQuote;
         if (nextQuote.length() > 0) {
             activeQuote = nextQuote;
         } else {
-            activeQuote = extractQuoteFromBin(moodIdentifier);
+            activeQuote = pickRandomQuote(moodId);
         }
-        nextQuote = extractQuoteFromBin(moodIdentifier);
-        Application.Storage.setValue("lastMoodIdentifier", moodIdentifier);
+        nextQuote = pickRandomQuote(moodId);
+        Application.Storage.setValue("lastMoodId", moodId);
         Application.Storage.setValue("activeQuote", activeQuote);
     }
 }

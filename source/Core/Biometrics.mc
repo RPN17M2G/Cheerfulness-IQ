@@ -6,34 +6,34 @@ import Toybox.Lang;
 module CoreBiometrics {
     const STRESS_THRESHOLD = 50;
     const BODY_BATTERY_THRESHOLD = 50;
-    const CHAOS_ROLL_PERCENTAGE = 3;
+    const CHAOS_ROLL_PERCENT = 3;
     const HISTORY_PERIOD_SECONDS = 300;
     const EVALUATION_COOLDOWN_MS = 300000;
 
-    var lastWasChaotic as Boolean = false;
-    var lastEvaluationTime as Number = 0;
-    var lastEvaluationResult as Number = -1;
+    var _wasChaotic as Boolean = false;
+    var _lastEvaluatedAt as Number = 0;
+    var _lastResult as Number = -1;
 
-    function evaluate() as Number {
+    function determineMood() as Number {
         var now = System.getTimer();
-        if (lastEvaluationResult >= 0 && now - lastEvaluationTime < EVALUATION_COOLDOWN_MS) {
-            return lastEvaluationResult;
+        if (_lastResult >= 0 && now - _lastEvaluatedAt < EVALUATION_COOLDOWN_MS) {
+            return _lastResult;
         }
-        lastEvaluationTime = now;
+        _lastEvaluatedAt = now;
 
-        var averageStress = _getAverageStress();
-        var latestBodyBattery = _getLatestBodyBattery();
-        var targetMood = _classify(averageStress, latestBodyBattery);
-        var useChaos = Math.rand() % 100 < CHAOS_ROLL_PERCENTAGE;
+        var averageStress = _averageStress();
+        var latestBodyBattery = _latestBodyBattery();
+        var targetMood = _classifyMood(averageStress, latestBodyBattery);
+        var useChaos = Math.rand() % 100 < CHAOS_ROLL_PERCENT;
 
-        lastEvaluationResult = useChaos
+        _lastResult = useChaos
             ? (targetMood + 1 + (Math.rand() % (CoreMood.COUNT - 1))) % CoreMood.COUNT
             : targetMood;
-        lastWasChaotic = useChaos;
-        return lastEvaluationResult;
+        _wasChaotic = useChaos;
+        return _lastResult;
     }
 
-    function _getAverageStress() as Number {
+    function _averageStress() as Number {
         try {
             var iterator = SensorHistory.getStressHistory({:period => HISTORY_PERIOD_SECONDS});
             var total = 0f;
@@ -53,7 +53,7 @@ module CoreBiometrics {
         }
     }
 
-    function _getLatestBodyBattery() as Number {
+    function _latestBodyBattery() as Number {
         try {
             var iterator = SensorHistory.getBodyBatteryHistory({:period => HISTORY_PERIOD_SECONDS});
             var sample = iterator.next();
@@ -65,7 +65,11 @@ module CoreBiometrics {
         }
     }
 
-    function _classify(averageStress as Number, latestBodyBattery as Number) as Number {
+    function isChaotic() as Boolean {
+        return _wasChaotic;
+    }
+
+    function _classifyMood(averageStress as Number, latestBodyBattery as Number) as Number {
         var moodBits = 0;
         if (averageStress > STRESS_THRESHOLD) {
             moodBits += 2;

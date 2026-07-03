@@ -34,13 +34,13 @@ garmin.config.json
 .settings/
 
 # ==========================================
-# 4. Intermediate Build Artifacts
+# 4. Build Artifacts
 # ==========================================
 data/
 resources/quotes/
 
 # ==========================================
-# 5. Custom Python Preprocessing Pipeline
+# 5. Python
 # ==========================================
 venv/
 env/
@@ -49,7 +49,7 @@ __pycache__/
 *.pyc
 
 # ==========================================
-# 5. OS Generated Files
+# 6. Other
 # ==========================================
 .DS_Store
 Thumbs.db

@@ -8,7 +8,7 @@ module CoreMood {
     const COUNT = 4;
 
     const LABELS = ["Resting", "Prime", "Burnout", "Wired"];
-    const MOOD_BITMAP_RESOURCE_IDENTIFIERS = [
+    const MOOD_BITMAPS = [
         Rez.Drawables.MoodResting,
         Rez.Drawables.MoodPrime,
         Rez.Drawables.MoodBurnout,

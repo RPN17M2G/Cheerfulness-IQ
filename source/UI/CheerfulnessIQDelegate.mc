@@ -3,21 +3,21 @@ import Toybox.Lang;
 
 class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
 
-    var view as CheerfulnessIQView;
+    var _view as CheerfulnessIQView;
 
     function initialize(viewParameter as CheerfulnessIQView) {
         BehaviorDelegate.initialize();
-        view = viewParameter;
+        _view = viewParameter;
     }
 
     function onNextPage() as Boolean {
-        view.scrollDown();
+        _view.scrollDown();
         WatchUi.requestUpdate();
         return true;
     }
 
     function onPreviousPage() as Boolean {
-        view.scrollUp();
+        _view.scrollUp();
         WatchUi.requestUpdate();
         return true;
     }
@@ -29,18 +29,14 @@ class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
 
         menu.addItem(new WatchUi.MenuItem(
             WatchUi.loadResource(Rez.Strings.NextQuote) as String,
-            "",
-            :next_quote,
-            null
+            "", :next_quote, null
         ));
         menu.addItem(new WatchUi.MenuItem(
             WatchUi.loadResource(Rez.Strings.SelectMood) as String,
-            "",
-            :select_mood,
-            null
+            "", :select_mood, null
         ));
 
-        WatchUi.pushView(menu, new CheerfulnessIQMenuDelegate(view), WatchUi.SLIDE_UP);
+        WatchUi.pushView(menu, new CheerfulnessIQMenuDelegate(_view), WatchUi.SLIDE_UP);
         return true;
     }
 }

@@ -12,7 +12,6 @@ Usage:
 import json
 import logging
 import os
-import random
 import subprocess
 import sys
 from typing import Dict, List, Tuple
@@ -321,5 +320,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    random.seed(42)
     main()
