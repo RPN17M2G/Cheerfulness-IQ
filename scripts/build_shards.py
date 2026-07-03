@@ -165,7 +165,7 @@ def generate_shard_index(all_entries: List[Tuple[str, str, int, int]]) -> None:
     """
     Write ``source/Core/ShardIndex.mc`` containing the
     ``const SHARD_IDS[MOOD_COUNT][SHARD_COUNT]`` lookup table and
-    ``const SHARD_COUNT`` constant.
+    ``const MOOD_SHARD_COUNTS[MOOD_COUNT]``` per-mood shard count array.
     """
     mood_shard_entries: Dict[str, List[Tuple[int, str]]] = {
         mood_name: [] for mood_name in MOOD_ORDER
@@ -187,8 +187,17 @@ def generate_shard_index(all_entries: List[Tuple[str, str, int, int]]) -> None:
         "",
         f"    const SHARD_COUNT as Number = {max_shards};",
         "",
-        "    const SHARD_IDS as Array<Array<ResourceId>> = [",
+        "    const MOOD_SHARD_COUNTS as Array<Number> = [",
     ]
+
+    for mood_index, mood_name in enumerate(MOOD_ORDER):
+        count = len(mood_shard_entries[mood_name])
+        trailing_comma = "," if mood_index < len(MOOD_ORDER) - 1 else ""
+        lines.append(f"        {count}{trailing_comma}")
+
+    lines.append("    ];")
+    lines.append("")
+    lines.append("    const SHARD_IDS as Array<Array<ResourceId>> = [")
 
     for mood_index, mood_name in enumerate(MOOD_ORDER):
         shards = sorted(mood_shard_entries[mood_name], key=lambda pair: pair[0])

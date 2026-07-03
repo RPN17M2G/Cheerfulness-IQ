@@ -1,3 +1,4 @@
+import Toybox.Application;
 import Toybox.WatchUi;
 import Toybox.Lang;
 import Toybox.Math;
@@ -10,14 +11,12 @@ module CoreQuoteEngine {
 
     const QUOTES_PER_SHARD = 100;
     const MAXIMUM_RETRIES = 3;
-    const QUOTE_SEPARATOR = "\n|\n";
-    const QUOTE_SEPARATOR_LENGTH = 3;
 
     function extractQuoteFromBin(moodIdentifier as Number) as String {
-        var shardCount = CoreShardIndex.SHARD_COUNT;
+        var moodShardCount = CoreShardIndex.MOOD_SHARD_COUNTS[moodIdentifier] as Number;
 
         for (var attempt = 0; attempt < MAXIMUM_RETRIES; attempt++) {
-            var shardIndex = Math.rand() % shardCount;
+            var shardIndex = Math.rand() % moodShardCount;
             var quoteIndex = Math.rand() % QUOTES_PER_SHARD;
             var result = _readQuote(moodIdentifier, shardIndex, quoteIndex);
             if (result != null) {
@@ -36,35 +35,23 @@ module CoreQuoteEngine {
             return null;
         }
 
-        var startIndex = 0;
-        var currentIndex = 0;
-        var searchPosition = 0;
-        var separator = QUOTE_SEPARATOR;
-        var separatorLength = QUOTE_SEPARATOR_LENGTH;
+        var separator = "\n|\n";
 
-        for (var positionInShard = 0; positionInShard <= quoteIndex; positionInShard++) {
-            var searchSlice = shardData.substring(searchPosition, shardData.length());
-            if (searchSlice == null) { return null; }
-            var found = searchSlice.find(separator);
-            var separatorPosition = found != null ? searchPosition + found : null;
-            if (separatorPosition == null) {
-                if (positionInShard == quoteIndex) {
-                    startIndex = searchPosition;
-                    currentIndex = shardData.length();
-                    break;
-                }
-                shardData = null;
-                return null;
-            }
-            if (positionInShard == quoteIndex) {
-                startIndex = searchPosition;
-                currentIndex = separatorPosition;
-                break;
-            }
-            searchPosition = separatorPosition + separatorLength;
+        var startPos = 0;
+        for (var i = 0; i < quoteIndex; i++) {
+            var remainder = shardData.substring(startPos, shardData.length());
+            if (remainder == null) { break; }
+            var found = remainder.find(separator);
+            if (found == null) { break; }
+            startPos = startPos + found + 3;
         }
 
-        var quote = shardData.substring(startIndex, currentIndex);
+        var remainder = shardData.substring(startPos, shardData.length());
+        if (remainder == null) { return null; }
+        var endFound = remainder.find(separator);
+        var endPos = endFound != null ? startPos + endFound : shardData.length();
+
+        var quote = shardData.substring(startPos, endPos);
         shardData = null;
 
         if (quote == null || quote.length() == 0) {
@@ -78,8 +65,19 @@ module CoreQuoteEngine {
         if (moodIdentifier == lastMoodIdentifier && activeQuote.length() > 0) {
             return;
         }
+        var storedMood = Application.Storage.getValue("lastMoodIdentifier");
+        if (storedMood != null && storedMood == moodIdentifier) {
+            var storedQuote = Application.Storage.getValue("activeQuote");
+            if (storedQuote != null && storedQuote.toString().length() > 0) {
+                activeQuote = storedQuote.toString();
+                lastMoodIdentifier = moodIdentifier;
+                return;
+            }
+        }
         lastMoodIdentifier = moodIdentifier;
         activeQuote = extractQuoteFromBin(moodIdentifier);
+        Application.Storage.setValue("lastMoodIdentifier", moodIdentifier);
+        Application.Storage.setValue("activeQuote", activeQuote);
         nextQuote = "";
         previousQuote = "";
     }
@@ -93,5 +91,7 @@ module CoreQuoteEngine {
             activeQuote = extractQuoteFromBin(moodIdentifier);
         }
         nextQuote = extractQuoteFromBin(moodIdentifier);
+        Application.Storage.setValue("lastMoodIdentifier", moodIdentifier);
+        Application.Storage.setValue("activeQuote", activeQuote);
     }
 }

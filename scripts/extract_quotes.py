@@ -12,6 +12,7 @@ Usage:
 import logging
 import os
 import random
+import re
 import sqlite3
 import sys
 from typing import Dict, List, Optional, Tuple
@@ -22,10 +23,12 @@ LOG = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-QUOTES_PER_MOOD: int = 11250
-MINIMUM_QUOTE_LENGTH: int = 20
+MAXIMUM_QUOTES_PER_MOOD: int = 22500
+MINIMUM_QUOTES_PER_MOOD: int = 10000
+MINIMUM_QUOTE_LENGTH: int = 30
 MAXIMUM_QUOTE_LENGTH: int = 180
-KEYWORD_SAMPLE_MULTIPLIER: int = 4
+MINIMUM_ALPHA_CHARS: int = 15
+KEYWORD_SAMPLE_MULTIPLIER: int = 40
 RANDOM_FILL_MULTIPLIER: int = 10
 
 QUOTES_DATABASE_PATH: str = os.path.join(
@@ -173,15 +176,52 @@ def clean_raw_text(raw: str) -> str:
 
 
 def is_valid_quote(text: str) -> bool:
-    """Check that the quote meets minimum length, fits within the maximum,
-    and is not a truncated fragment."""
+    """Check that the quote meets quality standards.
+
+    Filters:
+    - Length within [MINIMUM_QUOTE_LENGTH, MAXIMUM_QUOTE_LENGTH]
+    - No ``...`` anywhere (truncated or incomplete quotes)
+    - No URLs or HTML entities
+    - Contains enough alphabetic characters (not just symbols/numbers)
+    - Only allows letters, digits, standard punctuation, and whitespace
+    """
     if len(text) < MINIMUM_QUOTE_LENGTH:
         return False
     if truncate_quote(text) is None:
         return False
+
     stripped = text.strip()
-    if stripped.startswith("...") or stripped.endswith("..."):
+    if not stripped:
         return False
+
+    if "..." in stripped:
+        return False
+
+    lowercase = stripped.lower()
+    if "http://" in lowercase or "https://" in lowercase or "www." in lowercase:
+        return False
+
+    if re.search(r"&\w+;|&#\d+;|&#x[0-9a-fA-F]+;", stripped):
+        return False
+
+    alpha_count = sum(1 for character in stripped if character.isalpha())
+    if alpha_count < MINIMUM_ALPHA_CHARS:
+        return False
+    if alpha_count / max(len(stripped), 1) < 0.4:
+        return False
+
+    for character in stripped:
+        code_point = ord(character)
+        if 32 <= code_point <= 126:
+            continue
+        if character in "\n\r\t":
+            continue
+        if character in "\u2018\u2019\u201c\u201d\u2013\u2014\u2026":
+            continue
+        if 0x00A0 <= code_point <= 0x024F:
+            continue
+        return False
+
     return True
 
 
@@ -215,15 +255,16 @@ def extract_and_write() -> int:
         return 1
 
     all_selected: Dict[str, List[Tuple[str, str, str]]] = {}
+    mood_targets: Dict[str, int] = {}
     used_row_ids: set = set()
 
-    # -- Keyword-matched pass -------------------------------------------------
+    # -- Keyword-Matched pass -------------------------------------------------
     for mood_name, keywords in MOOD_KEYWORDS.items():
         like_clause, parameters = build_like_clauses(keywords)
         query = (
             f"SELECT rowid, author, category, quote FROM Quote "
             f"WHERE {like_clause} "
-            f"LIMIT {QUOTES_PER_MOOD * KEYWORD_SAMPLE_MULTIPLIER}"
+            f"LIMIT {MAXIMUM_QUOTES_PER_MOOD * KEYWORD_SAMPLE_MULTIPLIER}"
         )
 
         try:
@@ -253,33 +294,43 @@ def extract_and_write() -> int:
             scored_entries.append((match_score, cleaned, author, category))
 
         scored_entries.sort(key=lambda entry: -entry[0])
+        keyword_count = len(scored_entries)
+        mood_target = keyword_count if keyword_count < MINIMUM_QUOTES_PER_MOOD else MAXIMUM_QUOTES_PER_MOOD
+        mood_targets[mood_name] = mood_target
         selected = [
             (text, author, category_name)
-            for _, text, author, category_name in scored_entries[:QUOTES_PER_MOOD]
+            for _, text, author, category_name in scored_entries[:mood_target]
         ]
         LOG.info(
-            "  -> %s quotes (top keyword score: %s)",
+            "  -> %s quotes (target: %s, top keyword score: %s)",
             len(selected),
+            mood_target,
             scored_entries[0][0] if scored_entries else 0,
         )
         all_selected[mood_name] = selected
 
-    # -- Fill remaining slots with random quotes ------------------------------
+    # -- Fill moods below MINIMUM_QUOTES_PER_MOOD with random quotes ----------
     total_keyword_hits = sum(len(v) for v in all_selected.values())
     LOG.info("\nTotal collected via keywords: %s", total_keyword_hits)
 
-    best_mood = max(all_selected, key=lambda mood: len(all_selected[mood]))
-    LOG.info("  Most populous mood: %s (%s)", best_mood, len(all_selected[best_mood]))
+    mood_targets_fill = {}
+    for mood_name in MOOD_ORDER:
+        selected_count = len(all_selected[mood_name])
+        if selected_count < MINIMUM_QUOTES_PER_MOOD:
+            mood_targets_fill[mood_name] = MINIMUM_QUOTES_PER_MOOD
+        else:
+            mood_target = mood_targets[mood_name]
+            mood_targets_fill[mood_name] = min(mood_target, MAXIMUM_QUOTES_PER_MOOD)
 
     moods_needing_fill = [
         mood_name
         for mood_name in MOOD_ORDER
-        if len(all_selected[mood_name]) < QUOTES_PER_MOOD
+        if len(all_selected[mood_name]) < mood_targets_fill[mood_name]
     ]
 
     if moods_needing_fill:
         total_fill_needed = sum(
-            QUOTES_PER_MOOD - len(all_selected[mood_name])
+            mood_targets_fill[mood_name] - len(all_selected[mood_name])
             for mood_name in moods_needing_fill
         )
         LOG.info("Need %s more quotes from general pool", total_fill_needed)
@@ -297,7 +348,7 @@ def extract_and_write() -> int:
 
         fill_index = 0
         for mood_name in moods_needing_fill:
-            remaining = QUOTES_PER_MOOD - len(all_selected[mood_name])
+            remaining = mood_targets_fill[mood_name] - len(all_selected[mood_name])
             added = 0
             while added < remaining and fill_index < len(random_fill_rows):
                 row = random_fill_rows[fill_index]
@@ -326,7 +377,8 @@ def extract_and_write() -> int:
     for mood_name in MOOD_ORDER:
         pool = all_selected[mood_name]
         random.shuffle(pool)
-        final_selection = pool[:QUOTES_PER_MOOD]
+        final_count = mood_targets_fill[mood_name]
+        final_selection = pool[:final_count]
 
         output_path = os.path.join(
             INTERMEDIATE_DATA_DIRECTORY, f"{mood_name.lower()}.txt"

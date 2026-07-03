@@ -8,15 +8,14 @@ class CheerfulnessIQApp extends Application.AppBase {
         AppBase.initialize();
     }
 
-    function getInitialView() {
-        var view = new CheerfulnessIQView();
-        var delegate = new CheerfulnessIQDelegate(view);
-        return [view, delegate];
-    }
-
     (:glance)
     function getGlanceView() {
         return [ new CheerfulnessIQGlanceView() ];
+    }
+
+    function getInitialView() {
+        var view = new CheerfulnessIQView();
+        return [ view, new CheerfulnessIQDelegate(view) ];
     }
 }
 
