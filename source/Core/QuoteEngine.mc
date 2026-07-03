@@ -13,7 +13,7 @@ module CoreQuoteEngine {
     const SEP_LEN = 3;
 
     function extractQuoteFromBin(moodId as Number) as String {
-        var shardCount = _getShardCount(moodId);
+        var shardCount = CoreShardIndex.SHARD_COUNT;
 
         for (var attempt = 0; attempt < MAX_RETRIES; attempt++) {
             var shardIdx = Math.rand() % shardCount;
@@ -28,7 +28,8 @@ module CoreQuoteEngine {
     }
 
     function _readQuote(moodId as Number, shardIdx as Number, quoteIdx as Number) as String? {
-        var resId = _getBinSymbol(moodId, shardIdx);
+        var row = CoreShardIndex.SHARD_IDS[moodId] as Array<ResourceId>;
+        var resId = row[shardIdx];
         var shardString = WatchUi.loadResource(resId) as String;
         if (shardString == null || shardString.length() == 0) {
             return null;
@@ -67,21 +68,6 @@ module CoreQuoteEngine {
         }
 
         return quote;
-    }
-
-    function _getShardCount(moodId as Number) as Number {
-        return 2;
-    }
-
-    function _getBinSymbol(moodId as Number, shardIdx as Number) as ResourceId {
-        if (moodId == 3) {
-            return shardIdx == 0 ? Rez.JsonData.bin_wired_0 : Rez.JsonData.bin_wired_1;
-        } else if (moodId == 1) {
-            return shardIdx == 0 ? Rez.JsonData.bin_prime_0 : Rez.JsonData.bin_prime_1;
-        } else if (moodId == 2) {
-            return shardIdx == 0 ? Rez.JsonData.bin_burnout_0 : Rez.JsonData.bin_burnout_1;
-        }
-        return shardIdx == 0 ? Rez.JsonData.bin_resting_0 : Rez.JsonData.bin_resting_1;
     }
 
     function init(moodId as Number) as Void {

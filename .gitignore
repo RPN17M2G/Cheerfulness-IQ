@@ -5,8 +5,6 @@
 *.iq
 *.debug.xml
 bin/
-!resources/bin/
-!resources/bin/*.bin
 gen/
 out/
 output/
@@ -36,7 +34,12 @@ garmin.config.json
 .settings/
 
 # ==========================================
-# 4. Custom Python Preprocessing Pipeline
+# 4. Intermediate Build Artifacts
+# ==========================================
+data/
+
+# ==========================================
+# 5. Custom Python Preprocessing Pipeline
 # ==========================================
 venv/
 env/
