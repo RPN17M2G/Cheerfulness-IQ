@@ -1,0 +1,28 @@
+<resources>
+    <string id="AppName">Cheerfulness IQ</string>
+    <string id="MenuTitle">Options</string>
+    <string id="NextQuote">Next Quote</string>
+    <string id="SelectMood">Select Mood</string>
+    <string id="ToggleCooldown">Toggle Cooldown</string>
+    <string id="MoodWiredLabel">Wired</string>
+    <string id="MoodPrimeLabel">Prime</string>
+    <string id="MoodBurnoutLabel">Burnout</string>
+    <string id="MoodRestingLabel">Resting</string>
+
+    <!-- Binary Shards -->
+    <rawResource id="bin_resting_0" filename="bin/bin_resting_0.bin" />
+    <rawResource id="bin_resting_1" filename="bin/bin_resting_1.bin" />
+    <rawResource id="bin_prime_0" filename="bin/bin_prime_0.bin" />
+    <rawResource id="bin_prime_1" filename="bin/bin_prime_1.bin" />
+    <rawResource id="bin_burnout_0" filename="bin/bin_burnout_0.bin" />
+    <rawResource id="bin_burnout_1" filename="bin/bin_burnout_1.bin" />
+    <rawResource id="bin_wired_0" filename="bin/bin_wired_0.bin" />
+    <rawResource id="bin_wired_1" filename="bin/bin_wired_1.bin" />
+
+    <!-- Mood Bitmaps -->
+    <bitmap id="MoodResting" filename="drawables/mood_resting.png" />
+    <bitmap id="MoodPrime" filename="drawables/mood_prime.png" />
+    <bitmap id="MoodBurnout" filename="drawables/mood_burnout.png" />
+    <bitmap id="MoodWired" filename="drawables/mood_wired.png" />
+   <bitmap id="LauncherIcon" filename="drawables/launcher_icon.png" />
+</resources>
