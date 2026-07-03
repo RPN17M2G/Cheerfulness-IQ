@@ -7,11 +7,13 @@ EMPTY_SLOT = 0xFFFF
 MOODS = ["Resting", "Prime", "Burnout", "Wired"]
 MOOD_FILES = {m: f"data/{m.lower()}.txt" for m in MOODS}
 RESOURCE_OUT = "resources/resources.xml"
-BIN_OUT_DIR = "resources/bin"
+QUOTES_DIR = "resources/quotes"
+
+SEPARATOR = "\x01"
 
 AUTHORS = [
     "Marcus Aurelius", "Seneca", "Epictetus", "James Clear",
-    "Ryan Holiday", "Brené Brown", "Naval Ravikant", "Unknown",
+    "Ryan Holiday", "Bren\u00e9 Brown", "Naval Ravikant", "Unknown",
     "Nelson Mandela", "Maya Angelou", "Bruce Lee", "Rumi",
     "Lao Tzu", "Victor Frankl", "Eckhart Tolle", "Marie Curie",
 ]
@@ -159,7 +161,7 @@ def create_mock_data():
                 text = templates[i % len(templates)]
                 if i >= len(templates):
                     seed = (i * 7 + 13) % 97
-                    text = f"{text.rstrip('.')} — Reflection {seed}."
+                    text = f"{text.rstrip('.')} \u2014 Reflection {seed}."
                 author = AUTHORS[(i * 3 + len(mood)) % len(AUTHORS)]
                 f.write(f"{text}\n\n- {author}\0")
 
@@ -167,7 +169,7 @@ def build_shards_for_mood(mood_name, src_path):
     with open(src_path, "r", encoding="utf-8") as f:
         raw = f.read()
     raw_quotes = raw.split("\0")
-    quotes = [q + "\0" for q in raw_quotes if q.strip()]
+    quotes = [q for q in raw_quotes if q.strip()]
     total_quotes = len(quotes)
     num_shards = (total_quotes + SHARD_SIZE - 1) // SHARD_SIZE
     entries = []
@@ -175,19 +177,14 @@ def build_shards_for_mood(mood_name, src_path):
         start = shard_idx * SHARD_SIZE
         end = min(start + SHARD_SIZE, total_quotes)
         slice_quotes = quotes[start:end]
-        header = [EMPTY_SLOT] * SHARD_SIZE
-        payload = bytearray()
-        payload_start = 200
-        for i, q in enumerate(slice_quotes):
-            header[i] = payload_start + len(payload)
-            payload += q.encode("utf-8")
-        filename = f"bin_{mood_name.lower()}_{shard_idx}.bin"
-        filepath = os.path.join(BIN_OUT_DIR, filename)
-        with open(filepath, "wb") as out:
-            out.write(struct.pack("<" + "H" * SHARD_SIZE, *header))
+        payload = SEPARATOR.join(slice_quotes)
+        ext = ".txt"
+        filename = f"bin_{mood_name.lower()}_{shard_idx}{ext}"
+        filepath = os.path.join(QUOTES_DIR, filename)
+        with open(filepath, "w", encoding="utf-8") as out:
             out.write(payload)
-        entries.append((f"bin_{mood_name.lower()}_{shard_idx}", f"bin/{filename}"))
-        print(f"  [+] Built {filename} ({len(slice_quotes)} quotes, header={len(header)*2}B, payload={len(payload)}B)")
+        entries.append((f"bin_{mood_name.lower()}_{shard_idx}", f"quotes/{filename}", len(slice_quotes)))
+        print(f"  [+] Built {filename} ({len(slice_quotes)} quotes, {len(payload.encode('utf-8'))}B)")
     return entries
 
 def generate_resources_xml(all_entries):
@@ -202,9 +199,9 @@ def generate_resources_xml(all_entries):
     lines.append('    <string id="MoodBurnoutLabel">Burnout</string>')
     lines.append('    <string id="MoodRestingLabel">Resting</string>')
     lines.append('')
-    lines.append('    <!-- Binary Shards -->')
-    for res_id, filename in all_entries:
-        lines.append(f'    <rawResource id="{res_id}" filename="{filename}" />')
+    lines.append('    <!-- Quote Shards (delimited text, loaded as jsonData -> String) -->')
+    for res_id, filename, count in all_entries:
+        lines.append(f'    <jsonData id="{res_id}" filename="{filename}" />')
     lines.append('')
     lines.append('    <!-- Mood Bitmaps -->')
     for mood in MOODS:
@@ -216,8 +213,8 @@ def generate_resources_xml(all_entries):
     print(f"\n[+] Generated {RESOURCE_OUT} with {len(all_entries)} shards.")
 
 def main():
-    print("=== Cheerfulness IQ Data Pipeline ===")
-    os.makedirs(BIN_OUT_DIR, exist_ok=True)
+    print("=== Cheerfulness IQ Data Pipeline (SDK 9.x String-based Shards) ===")
+    os.makedirs(QUOTES_DIR, exist_ok=True)
     create_mock_data()
     all_entries = []
     for mood in MOODS:

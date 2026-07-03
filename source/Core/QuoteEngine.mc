@@ -1,6 +1,5 @@
 import Toybox.WatchUi;
 import Toybox.Lang;
-import Toybox.StringUtil;
 import Toybox.Math;
 
 module CoreQuoteEngine {
@@ -9,9 +8,8 @@ module CoreQuoteEngine {
     var prevQuote as String = "";
 
     private const QUOTES_PER_SHARD = 100;
-    private const HEADER_SIZE = 200;
-    private const EMPTY_SLOT = 0xFFFF;
     private const MAX_RETRIES = 5;
+    private const SEP = "\x01";
 
     function extractQuoteFromBin(moodId as Number) as String {
         var shardCount = _getShardCount(moodId);
@@ -30,43 +28,42 @@ module CoreQuoteEngine {
 
     private function _readQuote(moodId as Number, shardIdx as Number, quoteIdx as Number) as String? {
         var resourceSymbol = _getBinSymbol(moodId, shardIdx);
-        var bytes = WatchUi.loadResource(resourceSymbol) as ByteArray;
-        if (bytes == null) {
+        var shardString = WatchUi.loadResource(resourceSymbol) as String;
+        if (shardString == null || shardString.length() == 0) {
             return null;
         }
 
-        var offsetAddr = quoteIdx * 2;
-        var startOffset = _readUint16LE(bytes, offsetAddr);
+        var startIdx = 0;
+        var currentIdx = 0;
+        var searchFrom = 0;
 
-        if (startOffset == EMPTY_SLOT || startOffset < HEADER_SIZE) {
-            bytes = null;
+        for (var i = 0; i <= quoteIdx; i++) {
+            var sepPos = shardString.find(SEP, searchFrom);
+            if (sepPos == null) {
+                if (i == quoteIdx) {
+                    startIdx = searchFrom;
+                    currentIdx = shardString.length();
+                    break;
+                }
+                shardString = null;
+                return null;
+            }
+            if (i == quoteIdx) {
+                startIdx = searchFrom;
+                currentIdx = sepPos;
+                break;
+            }
+            searchFrom = sepPos + 1;
+        }
+
+        var quote = shardString.substring(startIdx, currentIdx);
+        shardString = null;
+
+        if (quote == null || quote.length() == 0) {
             return null;
         }
 
-        var endOffset = EMPTY_SLOT;
-        if (quoteIdx < QUOTES_PER_SHARD - 1) {
-            endOffset = _readUint16LE(bytes, offsetAddr + 2);
-        }
-
-        if (endOffset == EMPTY_SLOT) {
-            endOffset = bytes.size();
-        }
-
-        var slice = bytes.slice(startOffset, endOffset - 1);
-        bytes = null;
-
-        var result = StringUtil.utf8ArrayToString(slice);
-        if (result == null || result.length() == 0) {
-            return null;
-        }
-
-        return result;
-    }
-
-    private function _readUint16LE(bytes as ByteArray, addr as Number) as Number {
-        var lo = bytes[addr].toNumber();
-        var hi = bytes[addr + 1].toNumber();
-        return (hi << 8) | lo;
+        return quote;
     }
 
     private function _getShardCount(moodId as Number) as Number {
@@ -75,13 +72,13 @@ module CoreQuoteEngine {
 
     private function _getBinSymbol(moodId as Number, shardIdx as Number) as Symbol {
         if (moodId == 3) {
-            return shardIdx == 0 ? Rez.RawResources.bin_wired_0 : Rez.RawResources.bin_wired_1;
+            return shardIdx == 0 ? Rez.JsonData.bin_wired_0 : Rez.JsonData.bin_wired_1;
         } else if (moodId == 1) {
-            return shardIdx == 0 ? Rez.RawResources.bin_prime_0 : Rez.RawResources.bin_prime_1;
+            return shardIdx == 0 ? Rez.JsonData.bin_prime_0 : Rez.JsonData.bin_prime_1;
         } else if (moodId == 2) {
-            return shardIdx == 0 ? Rez.RawResources.bin_burnout_0 : Rez.RawResources.bin_burnout_1;
+            return shardIdx == 0 ? Rez.JsonData.bin_burnout_0 : Rez.JsonData.bin_burnout_1;
         }
-        return shardIdx == 0 ? Rez.RawResources.bin_resting_0 : Rez.RawResources.bin_resting_1;
+        return shardIdx == 0 ? Rez.JsonData.bin_resting_0 : Rez.JsonData.bin_resting_1;
     }
 
     function init(moodId as Number) as Void {

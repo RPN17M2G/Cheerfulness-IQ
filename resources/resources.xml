@@ -9,15 +9,15 @@
     <string id="MoodBurnoutLabel">Burnout</string>
     <string id="MoodRestingLabel">Resting</string>
 
-    <!-- Binary Shards -->
-    <rawResource id="bin_resting_0" filename="bin/bin_resting_0.bin" />
-    <rawResource id="bin_resting_1" filename="bin/bin_resting_1.bin" />
-    <rawResource id="bin_prime_0" filename="bin/bin_prime_0.bin" />
-    <rawResource id="bin_prime_1" filename="bin/bin_prime_1.bin" />
-    <rawResource id="bin_burnout_0" filename="bin/bin_burnout_0.bin" />
-    <rawResource id="bin_burnout_1" filename="bin/bin_burnout_1.bin" />
-    <rawResource id="bin_wired_0" filename="bin/bin_wired_0.bin" />
-    <rawResource id="bin_wired_1" filename="bin/bin_wired_1.bin" />
+    <!-- Quote Shards (delimited text, loaded as jsonData -> String) -->
+    <jsonData id="bin_resting_0" filename="quotes/bin_resting_0.txt" />
+    <jsonData id="bin_resting_1" filename="quotes/bin_resting_1.txt" />
+    <jsonData id="bin_prime_0" filename="quotes/bin_prime_0.txt" />
+    <jsonData id="bin_prime_1" filename="quotes/bin_prime_1.txt" />
+    <jsonData id="bin_burnout_0" filename="quotes/bin_burnout_0.txt" />
+    <jsonData id="bin_burnout_1" filename="quotes/bin_burnout_1.txt" />
+    <jsonData id="bin_wired_0" filename="quotes/bin_wired_0.txt" />
+    <jsonData id="bin_wired_1" filename="quotes/bin_wired_1.txt" />
 
     <!-- Mood Bitmaps -->
     <bitmap id="MoodResting" filename="drawables/mood_resting.png" />
