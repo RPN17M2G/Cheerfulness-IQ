@@ -5,9 +5,9 @@ class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
 
     var view as CheerfulnessIQView;
 
-    function initialize(v as CheerfulnessIQView) {
+    function initialize(viewParameter as CheerfulnessIQView) {
         BehaviorDelegate.initialize();
-        view = v;
+        view = viewParameter;
     }
 
     function onNextPage() as Boolean {

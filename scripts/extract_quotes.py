@@ -1,11 +1,43 @@
-import sqlite3, os, random
+"""
+Cheerfulness IQ — Quote Extraction & Mood Classification Pipeline.
 
-random.seed(42)
-DB_PATH = os.path.join(os.environ['TEMP'], 'ciq_quotes_db.sqlite3')
-DATA_DIR = "data"
-QUOTES_PER_MOOD = 11250
+Downloads the MIT-licensed quotes_library SQLite database (cached in %TEMP%),
+scores each quote against mood-specific keyword lists, and writes one
+intermediate text file per mood containing the top-scoring quotes.
 
-MOOD_KEYWORDS = {
+Usage:
+    python scripts/extract_quotes.py
+"""
+
+import logging
+import os
+import random
+import sqlite3
+import sys
+from typing import Dict, List, Optional, Tuple
+
+LOG = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+QUOTES_PER_MOOD: int = 11250
+MINIMUM_QUOTE_LENGTH: int = 20
+MAXIMUM_QUOTE_LENGTH: int = 180
+KEYWORD_SAMPLE_MULTIPLIER: int = 4
+RANDOM_FILL_MULTIPLIER: int = 10
+
+QUOTES_DATABASE_PATH: str = os.path.join(
+    os.environ["TEMP"], "ciq_quotes_db.sqlite3"
+)
+INTERMEDIATE_DATA_DIRECTORY: str = "data"
+
+UNICODE_REPLACEMENT_CHARACTER: str = "\ufffd"
+
+MOOD_ORDER: List[str] = ["Resting", "Prime", "Burnout", "Wired"]
+
+MOOD_KEYWORDS: Dict[str, List[str]] = {
     "Resting": [
         "peace", "calm", "relax", "sleep", "nature", "gratitude", "simplicity",
         "stillness", "quiet", "gentle", "serenity", "content", "rest", "pause",
@@ -89,104 +121,231 @@ MOOD_KEYWORDS = {
     ],
 }
 
-def truncate_quote(text):
-    if len(text) <= 180:
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def truncate_quote(text: str) -> Optional[str]:
+    """
+    Return *text* unchanged if it fits within the maximum length, or
+    ``None`` so the caller can skip the quote entirely.
+    """
+    if len(text) <= MAXIMUM_QUOTE_LENGTH:
         return text
     return None
 
-def make_like_clauses(keywords):
-    clauses = []
-    params = []
-    for kw in keywords:
-        p = f"%{kw}%"
-        clauses.append("(category LIKE ? OR quote LIKE ?)")
-        params.extend([p, p])
-    return " OR ".join(clauses), params
 
-def main():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    os.makedirs(DATA_DIR, exist_ok=True)
+def score_quote(text: str, category: str, keywords: List[str]) -> int:
+    """
+    Count how many *keywords* appear in the quote's text or category.
 
-    all_selected = {}
-    used_ids = set()
+    Higher scores indicate a stronger thematic match for the mood.
+    """
+    lowercase_text = text.lower()
+    lowercase_category = category.lower()
+    score = 0
+    for keyword in keywords:
+        if keyword in lowercase_text or keyword in lowercase_category:
+            score += 1
+    return score
 
-    for mood, keywords in MOOD_KEYWORDS.items():
-        clauses, params = make_like_clauses(keywords)
-        sql = f"SELECT rowid, author, category, quote FROM Quote WHERE {clauses} LIMIT {QUOTES_PER_MOOD * 4}"
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
-        print(f"{mood}: {len(rows)} keyword-matched rows")
 
-        selected = []
+def build_like_clauses(keywords: List[str]) -> Tuple[str, List[str]]:
+    """
+    Build a SQL ``WHERE`` clause and parameter list for a keyword search.
+
+    Each keyword generates a ``(category LIKE ? OR quote LIKE ?)`` clause.
+    """
+    like_clauses: List[str] = []
+    parameters: List[str] = []
+    for keyword in keywords:
+        like_pattern = f"%{keyword}%"
+        like_clauses.append("(category LIKE ? OR quote LIKE ?)")
+        parameters.extend([like_pattern, like_pattern])
+    return " OR ".join(like_clauses), parameters
+
+
+def clean_raw_text(raw: str) -> str:
+    """Replace the Unicode replacement character with an ASCII apostrophe."""
+    return raw.replace(UNICODE_REPLACEMENT_CHARACTER, "'").strip()
+
+
+def is_valid_quote(text: str) -> bool:
+    """Check that the quote meets minimum length and fits within the maximum."""
+    return len(text) >= MINIMUM_QUOTE_LENGTH and truncate_quote(text) is not None
+
+
+def configure_logging() -> None:
+    """Set up a simple stdout logger."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(message)s",
+        stream=sys.stdout,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Main extraction logic
+# ---------------------------------------------------------------------------
+
+
+def extract_and_write() -> int:
+    """
+    Orchestrate the full extraction pipeline.
+
+    Returns ``0`` on success, ``1`` on failure.
+    """
+    os.makedirs(INTERMEDIATE_DATA_DIRECTORY, exist_ok=True)
+
+    try:
+        connection = sqlite3.connect(QUOTES_DATABASE_PATH)
+        cursor = connection.cursor()
+    except sqlite3.Error as exception:
+        LOG.error("Failed to open database at %s: %s", QUOTES_DATABASE_PATH, exception)
+        return 1
+
+    all_selected: Dict[str, List[Tuple[str, str, str]]] = {}
+    used_row_ids: set = set()
+
+    # -- Keyword-matched pass -------------------------------------------------
+    for mood_name, keywords in MOOD_KEYWORDS.items():
+        like_clause, parameters = build_like_clauses(keywords)
+        query = (
+            f"SELECT rowid, author, category, quote FROM Quote "
+            f"WHERE {like_clause} "
+            f"LIMIT {QUOTES_PER_MOOD * KEYWORD_SAMPLE_MULTIPLIER}"
+        )
+
+        try:
+            cursor.execute(query, parameters)
+            rows = cursor.fetchall()
+        except sqlite3.Error as exception:
+            LOG.error("SQL error for mood '%s': %s", mood_name, exception)
+            connection.close()
+            return 1
+
+        LOG.info("%s: %s keyword-matched rows", mood_name, len(rows))
+
+        scored_entries: List[Tuple[int, str, str, str]] = []
         for row in rows:
-            rid = row[0]
-            if rid in used_ids:
+            row_id = row[0]
+            if row_id in used_row_ids:
                 continue
-            used_ids.add(rid)
-            text = row[3].replace('\ufffd', "'").strip()
-            if len(text) < 20:
+            used_row_ids.add(row_id)
+
+            cleaned = clean_raw_text(row[3])
+            if not is_valid_quote(cleaned):
                 continue
-            text = truncate_quote(text)
-            if text is None:
-                continue
-            author = row[1] if row[1] else ""
-            selected.append((text, author.strip(), row[2] if row[2] else ""))
-            if len(selected) >= QUOTES_PER_MOOD:
-                break
 
-        print(f"  -> {len(selected)} unique quotes after dedup")
-        all_selected[mood] = selected
+            author = row[1].strip() if row[1] else ""
+            category = row[2] if row[2] else ""
+            match_score = score_quote(cleaned, category, keywords)
+            scored_entries.append((match_score, cleaned, author, category))
 
-    total = sum(len(v) for v in all_selected.values())
-    print(f"\nTotal collected via keywords: {total}")
-    max_mood = max(all_selected, key=lambda m: len(all_selected[m]))
-    print(f"  Best mood: {max_mood} ({len(all_selected[max_mood])})")
+        scored_entries.sort(key=lambda entry: -entry[0])
+        selected = [
+            (text, author, category_name)
+            for _, text, author, category_name in scored_entries[:QUOTES_PER_MOOD]
+        ]
+        LOG.info(
+            "  -> %s quotes (top keyword score: %s)",
+            len(selected),
+            scored_entries[0][0] if scored_entries else 0,
+        )
+        all_selected[mood_name] = selected
 
-    needed_moods = [m for m in ["Resting", "Prime", "Burnout", "Wired"] if len(all_selected[m]) < QUOTES_PER_MOOD]
-    if needed_moods:
-        total_needed = sum(QUOTES_PER_MOOD - len(all_selected[m]) for m in needed_moods)
-        print(f"Need {total_needed} more quotes from general pool")
-        cursor.execute("SELECT rowid, author, category, quote FROM Quote ORDER BY RANDOM() LIMIT ?",
-                       (total_needed * 10,))
-        fill_rows = cursor.fetchall()
-        fill_idx = 0
-        for mood in needed_moods:
-            needed = QUOTES_PER_MOOD - len(all_selected[mood])
+    # -- Fill remaining slots with random quotes ------------------------------
+    total_keyword_hits = sum(len(v) for v in all_selected.values())
+    LOG.info("\nTotal collected via keywords: %s", total_keyword_hits)
+
+    best_mood = max(all_selected, key=lambda mood: len(all_selected[mood]))
+    LOG.info("  Most populous mood: %s (%s)", best_mood, len(all_selected[best_mood]))
+
+    moods_needing_fill = [
+        mood_name
+        for mood_name in MOOD_ORDER
+        if len(all_selected[mood_name]) < QUOTES_PER_MOOD
+    ]
+
+    if moods_needing_fill:
+        total_fill_needed = sum(
+            QUOTES_PER_MOOD - len(all_selected[mood_name])
+            for mood_name in moods_needing_fill
+        )
+        LOG.info("Need %s more quotes from general pool", total_fill_needed)
+
+        try:
+            cursor.execute(
+                "SELECT rowid, author, category, quote FROM Quote ORDER BY RANDOM() LIMIT ?",
+                (total_fill_needed * RANDOM_FILL_MULTIPLIER,),
+            )
+            random_fill_rows = cursor.fetchall()
+        except sqlite3.Error as exception:
+            LOG.error("SQL error during random fill: %s", exception)
+            connection.close()
+            return 1
+
+        fill_index = 0
+        for mood_name in moods_needing_fill:
+            remaining = QUOTES_PER_MOOD - len(all_selected[mood_name])
             added = 0
-            while added < needed and fill_idx < len(fill_rows):
-                row = fill_rows[fill_idx]
-                fill_idx += 1
-                rid = row[0]
-                if rid in used_ids:
+            while added < remaining and fill_index < len(random_fill_rows):
+                row = random_fill_rows[fill_index]
+                fill_index += 1
+                row_id = row[0]
+                if row_id in used_row_ids:
                     continue
-                used_ids.add(rid)
-                text = row[3].replace('\ufffd', "'").strip()
-                if len(text) < 20:
+                used_row_ids.add(row_id)
+
+                cleaned = clean_raw_text(row[3])
+                if not is_valid_quote(cleaned):
                     continue
-                text = truncate_quote(text)
-                if text is None:
-                    continue
-                author = row[1] if row[1] else ""
-                all_selected[mood].append((text, author.strip(), row[2] if row[2] else ""))
+
+                author = row[1].strip() if row[1] else ""
+                all_selected[mood_name].append(
+                    (cleaned, author, row[2] if row[2] else "")
+                )
                 added += 1
-            print(f"  Filled {mood} with {added} random quotes")
 
+            LOG.info("  Filled %s with %s random quotes", mood_name, added)
+
+    connection.close()
+
+    # -- Write intermediate text files ----------------------------------------
     total_written = 0
-    for mood in ["Resting", "Prime", "Burnout", "Wired"]:
-        pool = all_selected[mood]
+    for mood_name in MOOD_ORDER:
+        pool = all_selected[mood_name]
         random.shuffle(pool)
-        selected = pool[:QUOTES_PER_MOOD]
-        filepath = os.path.join(DATA_DIR, f"{mood.lower()}.txt")
-        with open(filepath, "w", encoding="utf-8") as f:
-            for text, author, cats in selected:
-                display_author = author if author else "Unknown"
-                f.write(f"{text}\n\n- {display_author}\0")
-        total_written += len(selected)
-        print(f"\n{mood}: {len(selected)} quotes written to {filepath}")
+        final_selection = pool[:QUOTES_PER_MOOD]
 
-    print(f"\n=== TOTAL: {total_written} quotes ===")
-    conn.close()
+        output_path = os.path.join(
+            INTERMEDIATE_DATA_DIRECTORY, f"{mood_name.lower()}.txt"
+        )
+
+        try:
+            with open(output_path, "w", encoding="utf-8") as handle:
+                for text, author, _category in final_selection:
+                    display_author = author if author else "Unknown"
+                    handle.write(f"{text}\n\n- {display_author}\0")
+        except OSError as exception:
+            LOG.error("Failed to write %s: %s", output_path, exception)
+            return 1
+
+        LOG.info("%s: %s quotes written to %s", mood_name, len(final_selection), output_path)
+        total_written += len(final_selection)
+
+    LOG.info("\n=== TOTAL: %s quotes ===", total_written)
+    return 0
+
+
+def main() -> None:
+    """Entry point."""
+    configure_logging()
+    sys.exit(extract_and_write())
+
 
 if __name__ == "__main__":
+    random.seed(42)
     main()

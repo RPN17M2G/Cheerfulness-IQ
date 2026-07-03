@@ -5,20 +5,20 @@ import Toybox.Math;
 module CoreQuoteEngine {
     var activeQuote as String = "";
     var nextQuote as String = "";
-    var prevQuote as String = "";
+    var previousQuote as String = "";
 
     const QUOTES_PER_SHARD = 100;
-    const MAX_RETRIES = 5;
-    const SEP = "\n|\n";
-    const SEP_LEN = 3;
+    const MAXIMUM_RETRIES = 5;
+    const QUOTE_SEPARATOR = "\n|\n";
+    const QUOTE_SEPARATOR_LENGTH = 3;
 
-    function extractQuoteFromBin(moodId as Number) as String {
+    function extractQuoteFromBin(moodIdentifier as Number) as String {
         var shardCount = CoreShardIndex.SHARD_COUNT;
 
-        for (var attempt = 0; attempt < MAX_RETRIES; attempt++) {
-            var shardIdx = Math.rand() % shardCount;
-            var quoteIdx = Math.rand() % QUOTES_PER_SHARD;
-            var result = _readQuote(moodId, shardIdx, quoteIdx);
+        for (var attempt = 0; attempt < MAXIMUM_RETRIES; attempt++) {
+            var shardIndex = Math.rand() % shardCount;
+            var quoteIndex = Math.rand() % QUOTES_PER_SHARD;
+            var result = _readQuote(moodIdentifier, shardIndex, quoteIndex);
             if (result != null) {
                 return result;
             }
@@ -27,41 +27,41 @@ module CoreQuoteEngine {
         return "Keep going. One day at a time.\n\n- Unknown";
     }
 
-    function _readQuote(moodId as Number, shardIdx as Number, quoteIdx as Number) as String? {
-        var row = CoreShardIndex.SHARD_IDS[moodId] as Array<ResourceId>;
-        var resId = row[shardIdx];
-        var shardString = WatchUi.loadResource(resId) as String;
-        if (shardString == null || shardString.length() == 0) {
+    function _readQuote(moodIdentifier as Number, shardIndex as Number, quoteIndex as Number) as String? {
+        var shardRow = CoreShardIndex.SHARD_IDS[moodIdentifier] as Array<ResourceId>;
+        var resourceIdentifier = shardRow[shardIndex];
+        var shardData = WatchUi.loadResource(resourceIdentifier) as String;
+        if (shardData == null || shardData.length() == 0) {
             return null;
         }
 
-        var startIdx = 0;
-        var currentIdx = 0;
-        var searchFrom = 0;
+        var startIndex = 0;
+        var currentIndex = 0;
+        var searchPosition = 0;
 
-        for (var i = 0; i <= quoteIdx; i++) {
-            var searchStr = shardString.substring(searchFrom, shardString.length());
-            var found = searchStr != null ? searchStr.find(SEP) : null;
-            var sepPos = found != null ? searchFrom + found : null;
-            if (sepPos == null) {
-                if (i == quoteIdx) {
-                    startIdx = searchFrom;
-                    currentIdx = shardString.length();
+        for (var positionInShard = 0; positionInShard <= quoteIndex; positionInShard++) {
+            var searchSlice = shardData.substring(searchPosition, shardData.length());
+            var found = searchSlice != null ? searchSlice.find(QUOTE_SEPARATOR) : null;
+            var separatorPosition = found != null ? searchPosition + found : null;
+            if (separatorPosition == null) {
+                if (positionInShard == quoteIndex) {
+                    startIndex = searchPosition;
+                    currentIndex = shardData.length();
                     break;
                 }
-                shardString = null;
+                shardData = null;
                 return null;
             }
-            if (i == quoteIdx) {
-                startIdx = searchFrom;
-                currentIdx = sepPos;
+            if (positionInShard == quoteIndex) {
+                startIndex = searchPosition;
+                currentIndex = separatorPosition;
                 break;
             }
-            searchFrom = sepPos + SEP_LEN;
+            searchPosition = separatorPosition + QUOTE_SEPARATOR_LENGTH;
         }
 
-        var quote = shardString.substring(startIdx, currentIdx);
-        shardString = null;
+        var quote = shardData.substring(startIndex, currentIndex);
+        shardData = null;
 
         if (quote == null || quote.length() == 0) {
             return null;
@@ -70,15 +70,15 @@ module CoreQuoteEngine {
         return quote;
     }
 
-    function init(moodId as Number) as Void {
-        activeQuote = extractQuoteFromBin(moodId);
-        nextQuote = extractQuoteFromBin(moodId);
-        prevQuote = "";
+    function initialize(moodIdentifier as Number) as Void {
+        activeQuote = extractQuoteFromBin(moodIdentifier);
+        nextQuote = extractQuoteFromBin(moodIdentifier);
+        previousQuote = "";
     }
 
-    function advance(moodId as Number) as Void {
-        prevQuote = activeQuote;
+    function advance(moodIdentifier as Number) as Void {
+        previousQuote = activeQuote;
         activeQuote = nextQuote;
-        nextQuote = extractQuoteFromBin(moodId);
+        nextQuote = extractQuoteFromBin(moodIdentifier);
     }
 }

@@ -37,6 +37,7 @@ garmin.config.json
 # 4. Intermediate Build Artifacts
 # ==========================================
 data/
+resources/quotes/
 
 # ==========================================
 # 5. Custom Python Preprocessing Pipeline
