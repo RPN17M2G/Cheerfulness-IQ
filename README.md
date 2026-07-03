@@ -1,5 +1,7 @@
 # Cheerfulness IQ
 
+![app-icon](@app_icon.png)
+
 A Garmin Connect IQ watch app that delivers motivational quotes adapted to your current physiological state. By reading your watch's stress and body battery metrics, it selects content that matches your real-time nervous system condition.
 
 ## How It Works

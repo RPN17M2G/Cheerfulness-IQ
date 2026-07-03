@@ -8,7 +8,7 @@ class CheerfulnessIQApp extends Application.AppBase {
         AppBase.initialize();
     }
 
-    function getInitialView() as [Views] or [Views, InputDelegates] {
+    function getInitialView() {
         var view = new CheerfulnessIQView();
         var delegate = new CheerfulnessIQDelegate(view);
         return [view, delegate];

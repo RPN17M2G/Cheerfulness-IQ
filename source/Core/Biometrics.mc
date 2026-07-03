@@ -27,9 +27,6 @@ module CoreBiometrics {
     function _getAverageStress() as Number {
         try {
             var iterator = SensorHistory.getStressHistory({:period => HISTORY_PERIOD_SECONDS});
-            if (iterator == null) {
-                return STRESS_THRESHOLD;
-            }
             return _computeAverage(iterator);
         } catch (exception) {
             return STRESS_THRESHOLD;
@@ -39,9 +36,6 @@ module CoreBiometrics {
     function _getAverageBodyBattery() as Number {
         try {
             var iterator = SensorHistory.getBodyBatteryHistory({:period => HISTORY_PERIOD_SECONDS});
-            if (iterator == null) {
-                return BODY_BATTERY_THRESHOLD;
-            }
             return _computeAverage(iterator);
         } catch (exception) {
             return BODY_BATTERY_THRESHOLD;
@@ -53,8 +47,9 @@ module CoreBiometrics {
         var sampleCount = 0;
         var sample = iterator.next();
         while (sample != null) {
-            if (sample.data != null) {
-                total += sample.data;
+            var dataValue = sample.data;
+            if (dataValue != null) {
+                total += dataValue;
             }
             sampleCount++;
             sample = iterator.next();
