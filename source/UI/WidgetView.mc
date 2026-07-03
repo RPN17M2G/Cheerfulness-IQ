@@ -86,13 +86,22 @@ class CheerfulnessIQView extends WatchUi.View {
     private function _drawMoodBanner(dc as Dc, moodId as Number, width as Number, splitY as Number) as Void {
         var labels = ["Resting", "Prime", "Burnout", "Wired"];
         var label = labels[moodId];
+        var cx = width / 2;
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-        dc.fillRectangle(0, 0, width, 20);
+        dc.drawText(cx - 1, 3, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx + 1, 3, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, 2, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, 4, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 2, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(cx, 3, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
         if (CoreBiometrics.lastWasChaotic) {
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width - 9, 4, Graphics.FONT_XTINY, "~", Graphics.TEXT_JUSTIFY_RIGHT);
+            dc.drawText(width - 7, 4, Graphics.FONT_XTINY, "~", Graphics.TEXT_JUSTIFY_RIGHT);
             dc.drawText(width - 8, 3, Graphics.FONT_XTINY, "~", Graphics.TEXT_JUSTIFY_RIGHT);
+            dc.drawText(width - 8, 5, Graphics.FONT_XTINY, "~", Graphics.TEXT_JUSTIFY_RIGHT);
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width - 8, 4, Graphics.FONT_XTINY, "~", Graphics.TEXT_JUSTIFY_RIGHT);
         }
     }
 
