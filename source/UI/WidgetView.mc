@@ -1,13 +1,15 @@
 import Toybox.WatchUi;
 import Toybox.Graphics;
 import Toybox.Lang;
-import Toybox.System;
 
 class CheerfulnessIQView extends WatchUi.View {
 
     var scrollOffset as Number;
     var activeBitmap as BitmapResource?;
     var currentMood as Number;
+
+    private const SCROLL_STEP = 25;
+    private const SCROLL_MIN = -800;
 
     function initialize() {
         View.initialize();
@@ -22,7 +24,7 @@ class CheerfulnessIQView extends WatchUi.View {
     function onShow() as Void {
         currentMood = CoreBiometrics.evaluate();
         CoreQuoteEngine.init(currentMood);
-        _loadBitmap(currentMood);
+        loadBitmap(currentMood);
         scrollOffset = 0;
         WatchUi.requestUpdate();
     }
@@ -31,7 +33,7 @@ class CheerfulnessIQView extends WatchUi.View {
         activeBitmap = null;
     }
 
-    private function _loadBitmap(moodId as Number) as Void {
+    function loadBitmap(moodId as Number) as Void {
         if (moodId == 1) {
             activeBitmap = WatchUi.loadResource(Rez.Drawables.MoodPrime) as BitmapResource;
         } else if (moodId == 2) {
@@ -78,16 +80,36 @@ class CheerfulnessIQView extends WatchUi.View {
         textArea.draw(dc);
         dc.clearClip();
 
-        _drawMoodLabel(dc, currentMood, width, height);
+        _drawMoodLabel(dc, currentMood, width);
     }
 
-    private function _drawMoodLabel(dc as Dc, moodId as Number, width as Number, height as Number) as Void {
+    private function _drawMoodLabel(dc as Dc, moodId as Number, width as Number) as Void {
         var labels = ["Resting", "Prime", "Burnout", "Wired"];
         var label = labels[moodId];
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, 2, Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    function onReceive(args as Dictionary?) as Void {
+    function clampScrollOffset() as Void {
+        if (scrollOffset > 0) {
+            scrollOffset = 0;
+        }
+        if (scrollOffset < SCROLL_MIN) {
+            scrollOffset = SCROLL_MIN;
+        }
+    }
+
+    function scrollDown() as Void {
+        scrollOffset -= SCROLL_STEP;
+        if (scrollOffset < SCROLL_MIN) {
+            scrollOffset = SCROLL_MIN;
+        }
+    }
+
+    function scrollUp() as Void {
+        scrollOffset += SCROLL_STEP;
+        if (scrollOffset > 0) {
+            scrollOffset = 0;
+        }
     }
 }

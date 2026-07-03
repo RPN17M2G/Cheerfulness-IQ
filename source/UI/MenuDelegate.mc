@@ -1,7 +1,6 @@
 import Toybox.WatchUi;
 import Toybox.Lang;
 import Toybox.Time;
-import Toybox.System;
 
 class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
 
@@ -12,22 +11,24 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
         view = v;
     }
 
-    function onSelect(item as MenuItem) as Void {
+    function onSelect(item as MenuItem) as Boolean {
         var id = item.getId();
 
         if (id.equals(:next_quote)) {
-            _onNextQuote();
+            return _onNextQuote();
         } else if (id.equals(:select_mood)) {
-            _onSelectMood();
+            return _onSelectMood();
         } else if (id.equals(:toggle_cooldown)) {
-            _onToggleCooldown();
+            return _onToggleCooldown();
         } else if (id.equals(:mood_resting) || id.equals(:mood_prime) ||
                    id.equals(:mood_burnout) || id.equals(:mood_wired)) {
-            _onForceMood(id);
+            return _onForceMood(id);
         }
+
+        return true;
     }
 
-    private function _onNextQuote() as Void {
+    private function _onNextQuote() as Boolean {
         if (CoreSettings.canSwapQuote()) {
             CoreSettings.setLastSwap(Time.now().value());
             CoreQuoteEngine.advance(view.currentMood);
@@ -35,10 +36,13 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             WatchUi.requestUpdate();
         }
+        return true;
     }
 
-    private function _onSelectMood() as Void {
-        var menu = new WatchUi.Menu2({:title => WatchUi.loadResource(Rez.Strings.SelectMood) as String});
+    private function _onSelectMood() as Boolean {
+        var menu = new WatchUi.Menu2({
+            :title => WatchUi.loadResource(Rez.Strings.SelectMood) as String
+        });
 
         menu.addItem(new WatchUi.MenuItem(
             WatchUi.loadResource(Rez.Strings.MoodRestingLabel) as String,
@@ -66,28 +70,37 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
         ));
 
         WatchUi.pushView(menu, self, WatchUi.SLIDE_UP);
+        return true;
     }
 
-    private function _onForceMood(id as Symbol) as Void {
-        if (id.equals(:mood_resting)) { view.currentMood = 0; }
-        else if (id.equals(:mood_prime)) { view.currentMood = 1; }
-        else if (id.equals(:mood_burnout)) { view.currentMood = 2; }
-        else if (id.equals(:mood_wired)) { view.currentMood = 3; }
+    private function _onForceMood(id as Symbol) as Boolean {
+        if (id.equals(:mood_resting)) {
+            view.currentMood = 0;
+        } else if (id.equals(:mood_prime)) {
+            view.currentMood = 1;
+        } else if (id.equals(:mood_burnout)) {
+            view.currentMood = 2;
+        } else if (id.equals(:mood_wired)) {
+            view.currentMood = 3;
+        }
 
         CoreQuoteEngine.init(view.currentMood);
-        view._loadBitmap(view.currentMood);
+        view.loadBitmap(view.currentMood);
         view.scrollOffset = 0;
         WatchUi.popView(WatchUi.SLIDE_DOWN);
         WatchUi.requestUpdate();
+        return true;
     }
 
-    private function _onToggleCooldown() as Void {
+    private function _onToggleCooldown() as Boolean {
         var enabled = CoreSettings.getCooldownEnabled();
         CoreSettings.setCooldownEnabled(!enabled);
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
     }
 
-    function onBack() as Void {
+    function onBack() as Boolean {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
     }
 }

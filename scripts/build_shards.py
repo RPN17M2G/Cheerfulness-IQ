@@ -209,7 +209,7 @@ def generate_resources_xml(all_entries):
     lines.append('    <!-- Mood Bitmaps -->')
     for mood in MOODS:
         lines.append(f'    <bitmap id="Mood{mood}" filename="drawables/mood_{mood.lower()}.png" />')
-    lines.append('   <bitmap id="LauncherIcon" filename="drawables/launcher_icon.png" />')
+    lines.append('    <bitmap id="LauncherIcon" filename="drawables/launcher_icon.png" />')
     lines.append('</resources>')
     with open(RESOURCE_OUT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))

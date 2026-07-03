@@ -24,5 +24,5 @@
     <bitmap id="MoodPrime" filename="drawables/mood_prime.png" />
     <bitmap id="MoodBurnout" filename="drawables/mood_burnout.png" />
     <bitmap id="MoodWired" filename="drawables/mood_wired.png" />
-   <bitmap id="LauncherIcon" filename="drawables/launcher_icon.png" />
+    <bitmap id="LauncherIcon" filename="drawables/launcher_icon.png" />
 </resources>

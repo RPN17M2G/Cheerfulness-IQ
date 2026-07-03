@@ -1,6 +1,5 @@
 import Toybox.WatchUi;
 import Toybox.Lang;
-import Toybox.System;
 
 class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
 
@@ -12,22 +11,21 @@ class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onNextPage() as Boolean {
-        view.scrollOffset = view.scrollOffset - 25;
+        view.scrollDown();
         WatchUi.requestUpdate();
         return true;
     }
 
     function onPreviousPage() as Boolean {
-        view.scrollOffset = view.scrollOffset + 25;
-        if (view.scrollOffset > 0) {
-            view.scrollOffset = 0;
-        }
+        view.scrollUp();
         WatchUi.requestUpdate();
         return true;
     }
 
     function onSelect() as Boolean {
-        var menu = new WatchUi.Menu2({:title => WatchUi.loadResource(Rez.Strings.MenuTitle) as String});
+        var menu = new WatchUi.Menu2({
+            :title => WatchUi.loadResource(Rez.Strings.MenuTitle) as String
+        });
 
         menu.addItem(new WatchUi.MenuItem(
             WatchUi.loadResource(Rez.Strings.NextQuote) as String,
