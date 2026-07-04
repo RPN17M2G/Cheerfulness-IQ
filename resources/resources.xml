@@ -7,6 +7,7 @@
     <string id="MoodPrimeLabel">Prime</string>
     <string id="MoodBurnoutLabel">Burnout</string>
     <string id="MoodRestingLabel">Resting</string>
+    <string id="StressThresholdLabel">Stress Threshold</string>
 
     <!-- Quote Shards (JSON strings) -->
     <jsonData id="bin_resting_0" filename="quotes/bin_resting_0.json" />

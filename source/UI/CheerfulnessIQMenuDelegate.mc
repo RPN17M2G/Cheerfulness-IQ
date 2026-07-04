@@ -1,3 +1,4 @@
+import Toybox.Application;
 import Toybox.WatchUi;
 import Toybox.Lang;
 
@@ -21,6 +22,8 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
             onNextQuote();
         } else if (identifier.equals(:select_mood)) {
             onSelectMood();
+        } else if (identifier.equals(:settings)) {
+            onSettings();
         } else {
             onForceMood(identifier);
         }
@@ -75,6 +78,48 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
             }
         }
         return false;
+    }
+
+    private function onSettings() as Boolean {
+        var currentThreshold = CoreBiometrics.stressThreshold();
+
+        var thresholdOptions = [30, 40, 50, 60, 70, 80];
+        var menu = new WatchUi.Menu2({
+            :title => WatchUi.loadResource(Rez.Strings.StressThresholdLabel) as String
+        });
+
+        for (var i = 0; i < thresholdOptions.size(); i++) {
+            var optionValue = thresholdOptions[i];
+            var sublabel = optionValue == currentThreshold ? "(current)" : "";
+            menu.addItem(new WatchUi.MenuItem(
+                optionValue.toString(), sublabel, null, null
+            ));
+        }
+
+        WatchUi.pushView(menu, new SettingsInputDelegate(_view), WatchUi.SLIDE_UP);
+        return true;
+    }
+
+    function onBack() {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+class SettingsInputDelegate extends WatchUi.Menu2InputDelegate {
+
+    var _view as CheerfulnessIQView;
+
+    function initialize(view as CheerfulnessIQView) {
+        Menu2InputDelegate.initialize();
+        _view = view;
+    }
+
+    function onSelect(item as MenuItem) {
+        Application.Storage.setValue("stressThreshold", item.getLabel());
+        CoreBiometrics.clearCachedResult();
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.requestUpdate();
     }
 
     function onBack() {

@@ -35,6 +35,10 @@ class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
             WatchUi.loadResource(Rez.Strings.SelectMood) as String,
             "", :select_mood, null
         ));
+        menu.addItem(new WatchUi.MenuItem(
+            WatchUi.loadResource(Rez.Strings.StressThresholdLabel) as String,
+            "", :settings, null
+        ));
 
         WatchUi.pushView(menu, new CheerfulnessIQMenuDelegate(_view), WatchUi.SLIDE_UP);
         return true;

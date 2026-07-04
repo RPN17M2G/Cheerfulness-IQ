@@ -20,7 +20,7 @@ Built in the Open. Completely free to use, no ads, and 100% open source.
 
 ## How It Works
 
-Each time you open the widget, Cheerfulness IQ evaluates the last 5 minutes of your biometric data and classifies your state into one of four quadrants:
+Each time you open the widget, Cheerfulness IQ evaluates the last 10 minutes of your biometric data and classifies your state into one of four quadrants:
 
 | Mood | Stress | Body Battery | Content |
 |------|--------|-------------|---------|
@@ -34,7 +34,7 @@ A 3% chaos roll occasionally serves a quote from a random mood to introduce fres
 ### Controls
 
 - **UP/DOWN** - Scroll quote text vertically
-- **SELECT** - Open menu: advance to next quote or force-select a mood
+- **SELECT** - Open menu: advance to next quote, force-select a mood, or adjust stress threshold
 - The widget appears in the watch face scroll loop via `GlanceView`
 
 ## Architecture
@@ -96,7 +96,14 @@ Or build from VS Code with the Connect IQ extension.
 
 ### Supported Devices
 
-Forerunner 255, 255 Music, 255s, 255s Music, 265
+Forerunner 165, 245, 255, 255 Music, 255s, 255s Music, 265, 265s, 745, 945, 955, 965
+Venu 2, 2 Plus, 3, 3s, 3q
+Fenix 6, 6 Pro, 6s, 6x Pro, 7, 7s, 7x, 7 Pro
+Epix 2, Epix 2 Pro
+Instinct 2, 2s
+Vivoactive 5
+MARQ 2
+Tactix 7, 7 Pro
 
 ## License & Attribution
 
