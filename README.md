@@ -4,6 +4,20 @@
 
 A Garmin Connect IQ widget that delivers motivational quotes matched to your current physiological state. Reads stress and body battery metrics, selects content for your real-time nervous system condition, and appears in the watch face glance loop.
 
+## Description
+
+A motivational quotes glance widget matched to your body's real-time Stress & Energy levels.
+
+Cheerfulness IQ reads your Garmin watch's Stress and Body Battery sensors to classify your nervous system into one of four mood quadrants - Wired, Prime, Burnout, or Resting - and serves a relevant motivational quote.
+
+Key Features:
+
+- Smart Biometrics: Adapts instantly to your current physical state or allows manual mood override.
+- Massive Offline Library: Features 64,000 curated quotes stored directly on your watch - no phone connection needed. Giving you around 60 years of daily inspiration right on your wrist.
+- The "Chaos Roll": Includes a 3% chance for a randomized quote to give you unexpected, fresh perspectives.
+
+Built in the Open. Completely free to use, no ads, and 100% open source.
+
 ## How It Works
 
 Each time you open the widget, Cheerfulness IQ evaluates the last 5 minutes of your biometric data and classifies your state into one of four quadrants:
@@ -106,18 +120,3 @@ copies or substantial portions of the Software.
 ### Background Images
 
 Mood photographs are under a free-to-use commercial license.
-
-### This Project
-
-```
-MIT License
-Copyright (c) 2024 Cheerfulness IQ Contributors
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-```
