@@ -1,55 +1,55 @@
-# Prerequisites
-*.d
+# ==========================================
+# 1. Garmin Connect IQ Build Artifacts
+# ==========================================
+*.prg
+*.iq
+*.debug.xml
+bin/
+gen/
+out/
+output/
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+# ==========================================
+# 2. Developer Security & Private Keys
+# ==========================================
+*.der
+developer_key.*
+garmin.config.json
 
-# Linker output
-*.ilk
-*.map
-*.exp
+# ==========================================
+# 3. IDE & Editor Files
+# ==========================================
+# VS Code 
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 
-# Precompiled Headers
-*.gch
-*.pch
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
+# ==========================================
+# 4. Build Artifacts
+# ==========================================
+data/
+resources/quotes/
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# ==========================================
+# 5. Python
+# ==========================================
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-# debug information files
-*.dwo
+# ==========================================
+# 6. Other
+# ==========================================
+.DS_Store
+Thumbs.db
