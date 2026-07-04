@@ -96,14 +96,9 @@ Or build from VS Code with the Connect IQ extension.
 
 ### Supported Devices
 
-Forerunner 165, 245, 255, 255 Music, 255s, 255s Music, 265, 265s, 745, 945, 955, 965
-Venu 2, 2 Plus, 3, 3s, 3q
-Fenix 6, 6 Pro, 6s, 6x Pro, 7, 7s, 7x, 7 Pro
-Epix 2, Epix 2 Pro
-Instinct 2, 2s
+Forerunner 165, 255, 255 Music, 255s, 255s Music, 265, 265s, 955, 965
+Venu 3, 3s
 Vivoactive 5
-MARQ 2
-Tactix 7, 7 Pro
 
 ## License & Attribution
 
