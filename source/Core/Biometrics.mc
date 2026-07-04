@@ -1,19 +1,33 @@
+import Toybox.Application;
 import Toybox.SensorHistory;
 import Toybox.Math;
 import Toybox.System;
+import Toybox.Time;
 import Toybox.Lang;
 
 module CoreBiometrics {
 
-    const STRESS_THRESHOLD = 50;
+    const DEFAULT_STRESS_THRESHOLD = 50;
     const BODY_BATTERY_THRESHOLD = 50;
     const CHAOS_ROLL_PERCENT = 3;
-    const HISTORY_PERIOD_SECONDS = 300;
+    const STRESS_WINDOW_SECONDS = 600;
     const EVALUATION_COOLDOWN_MS = 300000;
 
     var _wasChaotic as Boolean = false;
     var _lastEvaluatedAt as Number = 0;
     var _lastResult as Number = -1;
+
+    function clearCachedResult() as Void {
+        _lastResult = -1;
+    }
+
+    function stressThreshold() as Number {
+        var stored = Application.Storage.getValue("stressThreshold");
+        if (stored == null) { return DEFAULT_STRESS_THRESHOLD; }
+        if (stored instanceof Number) { return stored as Number; }
+        if (stored instanceof String) { return stored.toNumber(); }
+        return DEFAULT_STRESS_THRESHOLD;
+    }
 
     function determineMood() as Number {
         var now = System.getTimer();
@@ -23,9 +37,9 @@ module CoreBiometrics {
         }
         _lastEvaluatedAt = now;
 
-        var averageStress = _averageStress();
+        var isStressHigh = _isStressHigh();
         var latestBodyBattery = _latestBodyBattery();
-        var targetMood = _classifyMood(averageStress, latestBodyBattery);
+        var targetMood = _classifyMood(isStressHigh, latestBodyBattery);
 
         var useChaos = Math.rand() % 100 < CHAOS_ROLL_PERCENT;
 
@@ -37,32 +51,41 @@ module CoreBiometrics {
         return _lastResult;
     }
 
-    function _averageStress() as Number {
+    function _isStressHigh() as Boolean {
         try {
-            var iterator = SensorHistory.getStressHistory({:period => HISTORY_PERIOD_SECONDS});
-            var total = 0f;
-            var sampleCount = 0;
-            var sample = iterator.next();
+            var iterator = SensorHistory.getStressHistory({});
+            if (iterator == null) { return false; }
 
+            var total = 0f;
+            var count = 0;
+            var cutoff = Time.now().value() - STRESS_WINDOW_SECONDS;
+            var threshold = stressThreshold();
+
+            var sample = iterator.next();
             while (sample != null) {
-                var dataValue = sample.data;
-                if (dataValue != null) {
-                    total += dataValue;
+                var timestamp = sample.when.value();
+                if (timestamp < cutoff) { break; }
+
+                var value = sample.data;
+                if (value != null) {
+                    total += value;
+                    count++;
                 }
-                sampleCount++;
                 sample = iterator.next();
             }
 
-            return sampleCount == 0 ? STRESS_THRESHOLD : (total / sampleCount).toNumber();
+            if (count == 0) { return false; }
+
+            return (total / count) > threshold;
 
         } catch (exception) {
-            return STRESS_THRESHOLD;
+            return false;
         }
     }
 
     function _latestBodyBattery() as Number {
         try {
-            var iterator = SensorHistory.getBodyBatteryHistory({:period => HISTORY_PERIOD_SECONDS});
+            var iterator = SensorHistory.getBodyBatteryHistory({:period => 1});
             var sample = iterator.next();
 
             if (sample == null) { return BODY_BATTERY_THRESHOLD; }
@@ -81,10 +104,10 @@ module CoreBiometrics {
 
     // Encodes the mood classification as a 2-bit integer where the bits represent stress and body battery.
     // Wired(3) Prime(1) Burnout(2) Resting(0)
-    function _classifyMood(averageStress as Number, latestBodyBattery as Number) as Number {
+    function _classifyMood(isStressHigh as Boolean, latestBodyBattery as Number) as Number {
         var moodBits = 0;
 
-        if (averageStress > STRESS_THRESHOLD) {
+        if (isStressHigh) {
             moodBits += 2;
         }
         if (latestBodyBattery > BODY_BATTERY_THRESHOLD) {
