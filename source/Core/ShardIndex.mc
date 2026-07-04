@@ -3,8 +3,6 @@ import Toybox.Lang;
 
 module CoreShardIndex {
 
-    const SHARD_COUNT as Number = 225;
-
     const MOOD_SHARD_COUNTS as Array<Number> = [
         225,
         225,

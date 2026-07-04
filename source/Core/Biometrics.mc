@@ -79,8 +79,7 @@ module CoreBiometrics {
         return _wasChaotic;
     }
 
-    // Maps stress/body battery to mood index via 2-bit encoding:
-    // bit 1 = high stress (+2), bit 0 = high body battery (+1)
+    // Encodes the mood classification as a 2-bit integer where the bits represent stress and body battery.
     // Wired(3) Prime(1) Burnout(2) Resting(0)
     function _classifyMood(averageStress as Number, latestBodyBattery as Number) as Number {
         var moodBits = 0;
