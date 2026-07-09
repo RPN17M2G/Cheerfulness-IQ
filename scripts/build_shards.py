@@ -1,5 +1,5 @@
 """
-Cheerfulness IQ — Shard Builder Pipeline.
+Cheerfulness — Shard Builder Pipeline.
 
 Orchestrates quote extraction, splits each mood's quote pool into numbered
 JSON string shard files (100 quotes per shard), and auto-generates the
@@ -123,7 +123,7 @@ def generate_resource_xml(all_entries: List[Tuple[str, str, int, int]]) -> None:
     mood bitmap.
     """
     lines = ["<resources>"]
-    lines.append('    <string id="AppName">Cheerfulness IQ</string>')
+    lines.append('    <string id="AppName">Cheerfulness</string>')
     lines.append('    <string id="MenuTitle">Options</string>')
     lines.append('    <string id="NextQuote">Next Quote</string>')
     lines.append('    <string id="SelectMood">Select Mood</string>')
@@ -290,7 +290,7 @@ def configure_logging() -> None:
 def main() -> None:
     """Run the full build pipeline: extract → pack → index → validate."""
     configure_logging()
-    LOG.info("=== Cheerfulness IQ Data Pipeline (JSON String Shards) ===")
+    LOG.info("=== Cheerfulness Data Pipeline (JSON String Shards) ===")
 
     run_extraction_step()
 

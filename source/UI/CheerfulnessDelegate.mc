@@ -1,11 +1,11 @@
 import Toybox.WatchUi;
 import Toybox.Lang;
 
-class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
+class CheerfulnessDelegate extends WatchUi.BehaviorDelegate {
 
-    var _view as CheerfulnessIQView;
+    var _view as CheerfulnessView;
 
-    function initialize(viewParameter as CheerfulnessIQView) {
+    function initialize(viewParameter as CheerfulnessView) {
         BehaviorDelegate.initialize();
         _view = viewParameter;
     }
@@ -40,7 +40,7 @@ class CheerfulnessIQDelegate extends WatchUi.BehaviorDelegate {
             "", :settings, null
         ));
 
-        WatchUi.pushView(menu, new CheerfulnessIQMenuDelegate(_view), WatchUi.SLIDE_UP);
+        WatchUi.pushView(menu, new CheerfulnessMenuDelegate(_view), WatchUi.SLIDE_UP);
         return true;
     }
 }

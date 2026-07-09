@@ -2,15 +2,15 @@ import Toybox.Application;
 import Toybox.WatchUi;
 import Toybox.Lang;
 
-class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
+class CheerfulnessMenuDelegate extends WatchUi.Menu2InputDelegate {
 
-    var _view as CheerfulnessIQView;
+    var _view as CheerfulnessView;
 
     private const MOOD_SYMBOLS = [
         :mood_resting, :mood_prime, :mood_burnout, :mood_wired
     ];
 
-    function initialize(view as CheerfulnessIQView) {
+    function initialize(view as CheerfulnessView) {
         Menu2InputDelegate.initialize();
         _view = view;
     }
@@ -107,9 +107,9 @@ class CheerfulnessIQMenuDelegate extends WatchUi.Menu2InputDelegate {
 
 class SettingsInputDelegate extends WatchUi.Menu2InputDelegate {
 
-    var _view as CheerfulnessIQView;
+    var _view as CheerfulnessView;
 
-    function initialize(view as CheerfulnessIQView) {
+    function initialize(view as CheerfulnessView) {
         Menu2InputDelegate.initialize();
         _view = view;
     }

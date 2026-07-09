@@ -1,5 +1,5 @@
 """
-Cheerfulness IQ — Quote Extraction & Mood Classification Pipeline.
+Cheerfulness — Quote Extraction & Mood Classification Pipeline.
 
 Downloads the MIT-licensed quotes_library SQLite database (cached in %TEMP%),
 scores each quote against mood-specific keyword lists, and writes one
