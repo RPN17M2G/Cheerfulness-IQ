@@ -1,4 +1,4 @@
-# Cheerfulness IQ
+# Cheerfulness
 
 ![app-icon](app_icon.png)
 
@@ -8,7 +8,7 @@ A Garmin Connect IQ widget that delivers motivational quotes matched to your cur
 
 A motivational quotes glance widget matched to your body's real-time Stress & Energy levels.
 
-Cheerfulness IQ reads your Garmin watch's Stress and Body Battery sensors to classify your nervous system into one of four mood quadrants - Wired, Prime, Burnout, or Resting - and serves a relevant motivational quote.
+Cheerfulness reads your Garmin watch's Stress and Body Battery sensors to classify your nervous system into one of four mood quadrants - Wired, Prime, Burnout, or Resting - and serves a relevant motivational quote.
 
 Key Features:
 
@@ -20,7 +20,7 @@ Built in the Open. Completely free to use, no ads, and 100% open source.
 
 ## How It Works
 
-Each time you open the widget, Cheerfulness IQ evaluates the last 10 minutes of your biometric data and classifies your state into one of four quadrants:
+Each time you open the widget, Cheerfulness evaluates the last 10 minutes of your biometric data and classifies your state into one of four quadrants:
 
 | Mood | Stress | Body Battery | Content |
 |------|--------|-------------|---------|
@@ -51,17 +51,17 @@ Per-mood counts are unequal - the Python pipeline dynamically sets each mood's t
 
 ```
 source/
-  CheerfulnessIQApp.mc              - App entry point (extends AppBase)
+  CheerfulnessApp.mc              - App entry point (extends AppBase)
   Core/
     Biometrics.mc                   - Stress/BB evaluation + 3% chaos roll
     Mood.mc                         - Mood enum, labels, bitmap IDs
     QuoteEngine.mc                  - Random quote picker with shard scanning
     ShardIndex.mc                   - Auto-generated ResourceId lookup table
   UI/
-    CheerfulnessIQView.mc           - 30/70 viewport with mood photo + TextArea
-    CheerfulnessIQDelegate.mc       - UP/DOWN scroll, SELECT menu trigger
-    CheerfulnessIQMenuDelegate.mc   - Menu2 handler (advance, force mood)
-    CheerfulnessIQGlanceView.mc     - Title text for watch face glance loop
+    CheerfulnessView.mc           - 30/70 viewport with mood photo + TextArea
+    CheerfulnessDelegate.mc       - UP/DOWN scroll, SELECT menu trigger
+    CheerfulnessMenuDelegate.mc   - Menu2 handler (advance, force mood)
+    CheerfulnessGlanceView.mc     - Title text for watch face glance loop
 scripts/
     build_shards.py                 - Pipeline: extract + pack + index
     extract_quotes.py               - Keyword-score 286K quotes into 4 moods
@@ -89,7 +89,7 @@ Downloads the quotes database on first run (~114 MB, cached in `%TEMP%`), extrac
 ### Compile
 
 ```bash
-monkeyc -d fr255m_sim -f monkey.jungle -o bin/CheerfulnessIQ.prg -y /path/to/developer_key.der
+monkeyc -d fr255m_sim -f monkey.jungle -o bin/Cheerfulness.prg -y /path/to/developer_key.der
 ```
 
 Or build from VS Code with the Connect IQ extension.

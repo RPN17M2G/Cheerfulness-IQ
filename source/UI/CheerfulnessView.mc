@@ -2,7 +2,7 @@ import Toybox.WatchUi;
 import Toybox.Graphics;
 import Toybox.Lang;
 
-class CheerfulnessIQView extends WatchUi.View {
+class CheerfulnessView extends WatchUi.View {
 
     var scrollOffset as Number;
     var activeBitmap as BitmapResource?;

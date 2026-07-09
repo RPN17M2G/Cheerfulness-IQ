@@ -1,5 +1,5 @@
 <resources>
-    <string id="AppName">Cheerfulness IQ</string>
+    <string id="AppName">Cheerfulness</string>
     <string id="MenuTitle">Options</string>
     <string id="NextQuote">Next Quote</string>
     <string id="SelectMood">Select Mood</string>

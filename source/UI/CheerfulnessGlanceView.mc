@@ -3,7 +3,7 @@ import Toybox.Graphics;
 import Toybox.Lang;
 
 (:glance)
-class CheerfulnessIQGlanceView extends WatchUi.GlanceView {
+class CheerfulnessGlanceView extends WatchUi.GlanceView {
 
     function initialize() {
         GlanceView.initialize();
